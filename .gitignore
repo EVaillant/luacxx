@@ -1,0 +1,12 @@
+# build dir
+build
+
+*.project
+*.swp
+
+# qtcreator project file
+luacxx.files
+luacxx.config
+luacxx.creator
+luacxx.creator.user
+luacxx.includes
