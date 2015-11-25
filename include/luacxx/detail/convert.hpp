@@ -94,7 +94,7 @@ namespace luacxx
     {
         typedef T type;
 
-        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type& t, std::string &error_msg, const Policy& policy)
+        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type& t, std::string &error_msg, const Policy&)
         {
           if(lua_isnumber(state, idx))
           {
@@ -120,7 +120,7 @@ namespace luacxx
     {
         typedef T type;
 
-        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type& t, std::string &error_msg, const Policy& policy)
+        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type& t, std::string &error_msg, const Policy&)
         {
           if(lua_isnumber(state, idx))
           {
@@ -146,7 +146,7 @@ namespace luacxx
     {
         typedef std::string type;
 
-        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type &t, std::string &error_msg, const Policy& policy)
+        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type &t, std::string &error_msg, const Policy&)
         {
           if(lua_isstring(state, idx))
           {
@@ -172,7 +172,7 @@ namespace luacxx
     {
         typedef bool type;
 
-        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type &t, std::string &error_msg, const Policy& policy)
+        template <class Policy> static void from(lua_State *state, const RegisterType&, int idx, type &t, std::string &error_msg, const Policy&)
         {
           if(lua_isboolean(state, idx))
           {
