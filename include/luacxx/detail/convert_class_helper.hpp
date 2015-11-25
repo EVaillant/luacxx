@@ -72,7 +72,7 @@ namespace luacxx
           lua_getmetatable(state, idx);
           lua_pushstring(state, class_t::PVT_TYPE_ID);
           lua_gettable(state, -2);
-          int type_id = lua_tointeger(state, -1);
+          uint32_t type_id = lua_tounsigned(state, -1);
           lua_pop(state, 2);
 
           if(registry_.template get_type_id<T>() == type_id)
@@ -103,7 +103,7 @@ namespace luacxx
           lua_getmetatable(state, idx);
           lua_pushstring(state, class_t::PVT_TYPE_ID);
           lua_gettable(state, -2);
-          int type_id = lua_tointeger(state, -1);
+          uint32_t type_id = lua_tounsigned(state, -1);
           lua_pop(state, 2);
 
           if(registry_.template get_type_id<T>() == type_id)
