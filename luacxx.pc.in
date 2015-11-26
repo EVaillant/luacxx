@@ -8,4 +8,4 @@ Version: @PROJECT_VERSION@
 URL: https://github.com/EVaillant/luacxx
 Cflags: -I${includedir}
 Libs: -L${libdir} -lluacxx
-Requires: lua5.2 toolsbox
+Requires: lua5.3 toolsbox
