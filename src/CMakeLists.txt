@@ -6,7 +6,23 @@ file(
 )
 
 add_library(
-	luacxx
+	luacxx_static
 	STATIC
 	${luacxx_src}
 )
+
+add_library(
+	luacxx
+	SHARED
+	${luacxx_src}
+)
+
+install (TARGETS luacxx
+         ARCHIVE DESTINATION lib
+         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION bin)
+
+install (TARGETS luacxx_static
+         ARCHIVE DESTINATION lib
+         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION bin)

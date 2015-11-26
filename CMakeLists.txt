@@ -80,9 +80,11 @@ add_subdirectory(tests)
 #
 # configure file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/luacxx.pc.in ${CMAKE_CURRENT_BINARY_DIR}/luacxx.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/luacxx_static.pc.in ${CMAKE_CURRENT_BINARY_DIR}/luacxx_static.pc @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
 #
 # install
 install(DIRECTORY include/ DESTINATION include)
-install(FILES "${CMAKE_BINARY_DIR}/toolsbox.pc" DESTINATION lib/pkgconfig)
+install(FILES "${CMAKE_BINARY_DIR}/luacxx.pc" DESTINATION lib/pkgconfig)
+install(FILES "${CMAKE_BINARY_DIR}/luacxx_static.pc" DESTINATION lib/pkgconfig)

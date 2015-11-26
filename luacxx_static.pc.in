@@ -3,9 +3,9 @@ includedir=${prefix}/include
 libdir=${prefix}/lib
 
 Name: @PROJECT_NAME@
-Description: @PROJECT_DESCRIPTION@
+Description: @PROJECT_DESCRIPTION@  (Static)
 Version: @PROJECT_VERSION@
 URL: https://github.com/EVaillant/luacxx
 Cflags: -I${includedir}
-Libs: -L${libdir} -lluacxx
+Libs: -L${libdir} -lluacxx_static
 Requires: lua5.2 toolsbox
