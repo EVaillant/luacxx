@@ -5,7 +5,7 @@ set(PROJECT_DESCRIPTION "C++ Lua binding (c++11 / c++14)")
 set(PROJECT_VERSION 0.0.1 CACHE STRING "Version number")
 
 set(LUACXX_TESTS_DIR        "${CMAKE_SOURCE_DIR}/tests/")
-set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall -Wextra -ggdb -std=c++1y -I/home/luther/dev/github/root/include")
+set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall -Wextra -ggdb -std=c++1y")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_MODULE_PATH 			 ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -26,19 +26,10 @@ find_package(
 	COMPONENTS unit_test_framework
 )
 
-include_directories(
-		include
-		${CMAKE_CURRENT_BINARY_DIR}
-)
-
 #
 # Lua
 find_package(
 	Lua52
-)
-
-include_directories(
-	${LUA_INCLUDE_DIR}
 )
 
 if(LUA_INCLUDE_DIR)
@@ -46,6 +37,21 @@ if(LUA_INCLUDE_DIR)
 else ()
 	message(SEND_ERROR "Could not find Lua52")
 endif ()
+
+#
+# Toolsbox
+find_package(PkgConfig)
+pkg_check_modules(toolsbox REQUIRED toolsbox)
+
+#
+# update
+include_directories(
+		include
+		${CMAKE_CURRENT_BINARY_DIR}
+		${LUA_INCLUDE_DIR}
+
+)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${toolsbox_CFLAGS}")
 
 #
 # doxygen
