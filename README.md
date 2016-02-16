@@ -1,7 +1,7 @@
 # Luacxx 
 
 It is c++ lua binding (c++11 / c++14)
-* only depends on lua
+* depends on lua and toolsbox
 * without rtti
 * without exception
 
@@ -14,7 +14,7 @@ TODO
 * c++ compiler with support c++11 and some part of c++14
 * [cmake](https://cmake.org/) 2.6 or highter
 * boost / unit test (not mandatory, to run unit test)
-* [lua](http://www.lua.org/) 5.2 or highter
+* [lua](http://www.lua.org/) 5.3 or highter
 
 ## Build (Unix)
 
@@ -32,26 +32,32 @@ CMAKE_INSTALL_PREFIX | path | /usr/local | Prefix installation
 run cmake :
 
 ```shell
-toolsbox $ mkdir build && cd build
-build    $ cmake ..
+luacxx $ mkdir build && cd build
+build  $ cmake ..
+```
+
+specify tu cmake where is lua :
+```shell
+luacxx $ mkdir build && cd build
+build  $ LUA_DIR=/lua/root/dir cmake ..
 ```
 
 build :
 
 ```shell
-build    $ make
+build $ make
 ```
 
 run unit test :
 
 ```shell
-build    $ make test
+build $ make test
 ```
 
 install :
 
 ```shell
-build    $ make install
+build $ make install
 ```
 
 ## Licence
