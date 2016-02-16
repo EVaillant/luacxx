@@ -1,7 +1,7 @@
 # Luacxx 
 
 It is c++ lua binding (c++11 / c++14)
-* onlu lua depends
+* only depends on lua
 * without rtti
 * without exception
 
