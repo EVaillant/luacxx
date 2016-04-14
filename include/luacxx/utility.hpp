@@ -7,7 +7,7 @@
 
 namespace luacxx
 {
-  template <class T> auto cast_arg_call(toolsbox::any& value) -> decltype(detail::arg_call<T>::convert(value))
+  template <class T> auto cast_arg_call(toolsbox::any& value)
   {
     return detail::arg_call<T>::convert(value);
   }
