@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 2.6)
-project(luacxx)
+cmake_minimum_required(VERSION 3.0)
+project(luacxx VERSION 0.0.1)
 
 set(PROJECT_DESCRIPTION "C++ Lua binding (c++11 / c++14)")
-set(PROJECT_VERSION 0.0.1 CACHE STRING "Version number")
 
 set(LUACXX_TESTS_DIR        "${CMAKE_SOURCE_DIR}/tests/")
 set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall -Wextra -ggdb -std=c++1y")
