@@ -5,8 +5,8 @@
 
 namespace luacxx
 {
-  constexpr std::string msg_error_type_not_supported = "type not supported";
-  constexpr std::string msg_error_invalid_tranformation = "invalid transformation";
+  constexpr auto msg_error_type_not_supported    = "type not supported";
+  constexpr auto msg_error_invalid_tranformation = "invalid transformation";
 }
 
 #endif
