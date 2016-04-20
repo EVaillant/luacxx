@@ -5,9 +5,10 @@ if (Boost_FOUND)
     test_core
     test_core.cc
     test_policy.cc
-    test_request_from.cc
     test_arg_call.cc
     test_lookup_type.cc
+    test_convert.cc
+    test_request_from.cc
   )
   target_link_libraries(
     test_core

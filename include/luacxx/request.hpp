@@ -99,7 +99,7 @@ namespace luacxx
           const type_info<arg_register_type>&  type_info = registry_.get<arg_register_type>();
           if(parameter.is_input())
           {
-            convert<arg_type>::from(state_, registry_, start_idx_ + I, ret, msg, policy);
+            convert_from<arg_type>(state_, registry_, start_idx_ + I, ret, msg, policy);
             if(msg.empty())
             {
               check_arg_call<arg_type>(msg, ret);
@@ -109,7 +109,7 @@ namespace luacxx
               msg += " arg:" + std::to_string(I);
             }
           }
-          else
+          else if(type_info.valid())
           {
             ret = type_info.default_initializer();
           }
@@ -128,7 +128,7 @@ namespace luacxx
 
           if((parameter.is_output() && I > 0) || (!parameter.has_return() && I == 0))
           {
-            convert<arg_type>::to(state_, registry_, value, msg, policy);
+            convert_to<arg_type>(state_, registry_, value, msg, policy);
             if(!msg.empty())
             {
               msg += " arg:" + std::to_string(I);

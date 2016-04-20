@@ -23,7 +23,7 @@ namespace luacxx
       typedef register_type*                  ptr_register_type;
       typedef std::shared_ptr<register_type>  shared_register_type;
 
-      static bool check(toolsbox::any& value)
+      static bool check(const toolsbox::any& value)
       {
         return (value.is<register_type>() || value.is<ptr_register_type>() || value.is<shared_register_type>());
       }
@@ -53,7 +53,7 @@ namespace luacxx
       typedef register_type*                  ptr_register_type;
       typedef std::shared_ptr<register_type>  shared_register_type;
 
-      static bool check(toolsbox::any& value)
+      static bool check(const toolsbox::any& value)
       {
         return (value.is<register_type>() || value.is<ptr_register_type>() || value.is<shared_register_type>());
       }
@@ -82,7 +82,7 @@ namespace luacxx
       typedef typename register_type<T>::type register_type;
       typedef std::shared_ptr<register_type> shared_register_type;
 
-      static bool check(toolsbox::any& value)
+      static bool check(const toolsbox::any& value)
       {
         return value.is<shared_register_type>();
       }
