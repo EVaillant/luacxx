@@ -53,6 +53,7 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${LUA_INCLUDE_DIR}
     ${toolsbox_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIR}
 )
 
 #

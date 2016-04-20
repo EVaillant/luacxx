@@ -10,9 +10,9 @@ TODO
 
 ## Required
 
-* c++ compiler with support c++11 and some part of c++14
+* c++ compiler with support c++11 / c++14
 * [toolsbox](https://github.com/EVaillant/toolsbox)
-* [cmake](https://cmake.org/) 2.6 or highter
+* [cmake](https://cmake.org/) 3.0 or highter
 * boost / unit test (not mandatory, to run unit test)
 * [lua](http://www.lua.org/) 5.3 or highter
 

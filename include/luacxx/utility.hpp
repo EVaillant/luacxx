@@ -3,21 +3,23 @@
 
 # include <toolsbox/any.hpp>
 # include <luacxx/detail/arg_call.hpp>
-# include <luacxx/error_msg.hpp>
+# include <luacxx/constant.hpp>
 
 namespace luacxx
 {
-  template <class T> auto cast_arg_call(toolsbox::any& value)
+  template <class T> auto cast_arg_call(toolsbox::any& value) -> decltype(detail::arg_call<T>::convert(value))
   {
     return detail::arg_call<T>::convert(value);
   }
 
-  template <class T> void check_arg_call(std::string& msg, toolsbox::any& value)
+  template <class T> bool check_arg_call(std::string& msg, const toolsbox::any& value)
   {
-    if(! detail::arg_call<T>::check(value))
+    bool error = !detail::arg_call<T>::check(value);
+    if( error )
     {
       msg = msg_error_invalid_tranformation;
     }
+    return error;
   }
 }
 

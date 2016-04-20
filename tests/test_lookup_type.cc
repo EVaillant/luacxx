@@ -17,11 +17,11 @@ namespace
   {
     public:
       blabla_type_info()
-        : type_info<blabla>(luacxx::common_type_info::underlying_type::Class, true)
+        : type_info<blabla>(luacxx::common_type_info::underlying_type::Class)
       {
       }
 
-      virtual void to_lua(luacxx::state_type, const luacxx::common_type_info::variable_type&, std::string &, const luacxx::policy_node&) const override
+      virtual void to_lua(luacxx::state_type, luacxx::common_type_info::variable_type&, std::string &, const luacxx::policy_node&) const override
       {
       }
 
@@ -39,11 +39,11 @@ namespace
   {
     public:
       int_type_info()
-        : type_info<int>(luacxx::common_type_info::underlying_type::Native, true)
+        : type_info<int>(luacxx::common_type_info::underlying_type::Native)
       {
       }
 
-      virtual void to_lua(luacxx::state_type, const luacxx::common_type_info::variable_type&, std::string &, const luacxx::policy_node&) const override
+      virtual void to_lua(luacxx::state_type, luacxx::common_type_info::variable_type&, std::string &, const luacxx::policy_node&) const override
       {
       }
 
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(lookup_type_01)
   BOOST_CHECK(!lookup.exist<blabla>());
   BOOST_CHECK(!lookup.exist<int>());
 
-  std::unique_ptr<blabla_type_info> ti1(new blabla_type_info());
-  std::unique_ptr<int_type_info>    ti2(new int_type_info());
+  std::shared_ptr<blabla_type_info> ti1 = std::make_shared<blabla_type_info>();
+  std::shared_ptr<int_type_info>    ti2 = std::make_shared<int_type_info>();
 
   void* p1 = ti1.get();
   void* p2 = ti2.get();
