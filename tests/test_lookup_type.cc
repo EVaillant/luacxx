@@ -28,11 +28,6 @@ namespace
       virtual void from_lua(luacxx::state_type, std::size_t, common_type_info::variable_type& , std::string&, const luacxx::policy_node&) const override
       {
       }
-
-      virtual common_type_info::variable_type default_initializer() const override
-      {
-        return common_type_info::variable_type();
-      }
   };
 
   class int_type_info : public luacxx::type_info<int>
@@ -49,11 +44,6 @@ namespace
 
       virtual void from_lua(luacxx::state_type, std::size_t, common_type_info::variable_type& , std::string&, const luacxx::policy_node&) const override
       {
-      }
-
-      virtual common_type_info::variable_type default_initializer() const override
-      {
-        return common_type_info::variable_type();
       }
   };
 }

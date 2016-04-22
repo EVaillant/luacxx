@@ -4,6 +4,7 @@
 # include <luacxx/convert.hpp>
 # include <luacxx/utility.hpp>
 # include <luacxx/policy.hpp>
+# include <luacxx/default_initializer.hpp>
 # include <luacxx/state.hpp>
 
 # include <utility>
@@ -109,9 +110,9 @@ namespace luacxx
               msg += " arg:" + std::to_string(I);
             }
           }
-          else if(type_info.valid())
+          else
           {
-            ret = type_info.default_initializer();
+            ret = default_initializer<arg_type>::empty();
           }
         }
         return ret;

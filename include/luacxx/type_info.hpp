@@ -46,7 +46,6 @@ namespace luacxx
 
       virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const = 0;
       virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node& policy) const = 0;
-      virtual variable_type default_initializer() const = 0;
 
     protected:
       underlying_type underlying_type_;
@@ -82,11 +81,6 @@ namespace luacxx
       virtual void from_lua(state_type, std::size_t, variable_type& , std::string& error_msg, const policy_node&) const override
       {
         error_msg = msg_error_type_not_supported;
-      }
-
-      virtual variable_type default_initializer() const override
-      {
-        return variable_type();
       }
   };
 
@@ -125,11 +119,6 @@ namespace luacxx
           error_msg = msg_error_invalid_integer;
         }
       }
-
-      virtual variable_type default_initializer() const override
-      {
-        return variable_type(type(0));
-      }
   };
 
   template <class T> class number_type_info : public type_info<T>
@@ -167,11 +156,6 @@ namespace luacxx
           error_msg = msg_error_invalid_number;
         }
       }
-
-      virtual variable_type default_initializer() const override
-      {
-        return variable_type(type(0.0));
-      }
   };
 
   template <class T> class string_type_info : public type_info<T>
@@ -206,11 +190,6 @@ namespace luacxx
         {
           error_msg = msg_error_invalid_string;
         }
-      }
-
-      virtual variable_type default_initializer() const override
-      {
-        return variable_type(std::string());
       }
 
     private:
@@ -250,11 +229,6 @@ namespace luacxx
         {
           error_msg = msg_error_invalid_boolean;
         }
-      }
-
-      inline virtual variable_type default_initializer() const override
-      {
-        return variable_type(bool(false));
       }
   };
 }
