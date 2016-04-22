@@ -16,8 +16,8 @@
 
 namespace luacxx
 {
-  template <class T> void convert_from(state_type state, const lookup_type& registry, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy);
-  template <class T> void convert_to(state_type state, const lookup_type& registry, toolsbox::any& var, std::string& error_msg, const policy_node& policy);
+  template <class T> bool convert_from(state_type state, const lookup_type& registry, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy);
+  template <class T> bool convert_to(state_type state, const lookup_type& registry, toolsbox::any& var, std::string& error_msg, const policy_node& policy);
 
   namespace detail
   {
@@ -93,7 +93,7 @@ namespace luacxx
       {
         std::size_t index = 1;
         lua_newtable(state);
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
           const policy_node& sub_node = policy.get_sub_node(node_container_unary);
           for(auto& elt : cast_arg_call<type>(var))
@@ -156,7 +156,7 @@ namespace luacxx
       static void to(state_type state, const lookup_type& registry, variable_type& var, std::string& error_msg, const policy_node& policy)
       {
         lua_newtable(state);
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
           const policy_node& key_node   = policy.get_sub_node(node_container_binary_key);
           const policy_node& value_node = policy.get_sub_node(node_container_binary_value);

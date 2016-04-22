@@ -93,11 +93,9 @@ namespace luacxx
         if(msg.empty())
         {
           typedef typename std::tuple_element<I, args_type>::type arg_type;
-          typedef typename detail::register_type<arg_type>::type  arg_register_type;
 
           const policy_node&                   policy    = policy_.get_sub_node( std::to_string(1 + I) );
           const parameter_policy&              parameter = policy.get_parameter();
-          const type_info<arg_register_type>&  type_info = registry_.get<arg_register_type>();
           if(parameter.is_input())
           {
             convert_from<arg_type>(state_, registry_, start_idx_ + I, ret, msg, policy);

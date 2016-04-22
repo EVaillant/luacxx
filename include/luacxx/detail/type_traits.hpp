@@ -51,6 +51,11 @@ namespace luacxx
       typedef typename register_type<T>::type type;
     };
 
+    template <> struct register_type<const char*>
+    {
+      typedef const char* type;
+    };
+
     template <class T> struct register_type<const T&>
     {
       typedef typename register_type<T>::type type;
