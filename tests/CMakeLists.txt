@@ -13,6 +13,7 @@ if (Boost_FOUND)
   target_link_libraries(
     test_core
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${LUA_LIBRARY}
   )
   add_test(test_core test_core)
 

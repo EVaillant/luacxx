@@ -99,7 +99,7 @@ namespace luacxx
 
       virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node&) const override
       {
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
           type& elt = cast_arg_call<type>(var);
           lua_pushinteger(state, elt);
@@ -136,7 +136,7 @@ namespace luacxx
 
       virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node&) const override
       {
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
           type& elt = cast_arg_call<type>(var);
           lua_pushnumber(state, elt);
@@ -171,10 +171,10 @@ namespace luacxx
 
       virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node&) const override
       {
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
-          type& elt = cast_arg_call<type>(var);
-          lua_pushstring(state, cstr_(elt));
+          const char* elt = cstr_(cast_arg_call<type>(var));
+          lua_pushstring(state, elt);
         }
       }
 
@@ -210,7 +210,7 @@ namespace luacxx
 
       inline virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node&) const override
       {
-        if(check_arg_call<type>(error_msg, var))
+        if(!check_arg_call<type>(error_msg, var))
         {
           type& elt = cast_arg_call<type>(var);
           lua_pushboolean(state, elt);
