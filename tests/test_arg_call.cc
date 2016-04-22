@@ -5,167 +5,309 @@
 
 #include <luacxx/utility.hpp>
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_01)
+BOOST_AUTO_TEST_CASE(test_arg_call_int_ptr)
 {
-  toolsbox::any v = 5;
-
+  typedef int* type;
   std::string msg;
-  luacxx::check_arg_call<int>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<int>(v));
+
+  {
+    toolsbox::any a(5);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int y = 5;
+    toolsbox::any a(std::ref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int y = 5;
+    toolsbox::any a(&y);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::ref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> b = std::make_shared<int>(5);
+    toolsbox::any a(b);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> b = std::make_shared<int>(5);
+    toolsbox::any a(std::ref(b));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_02)
+BOOST_AUTO_TEST_CASE(test_arg_call_const_int_ptr)
 {
-  toolsbox::any v = 5;
-
+  typedef const int* type;
   std::string msg;
-  luacxx::check_arg_call<const int&>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<const int&>(v));
+
+  {
+    int y = 5;
+    toolsbox::any a(std::cref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::cref(o));
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> b = std::make_shared<int>(5);
+    toolsbox::any a(std::cref(b));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    toolsbox::any a(5);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int y = 5;
+    toolsbox::any a(std::ref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int y = 5;
+    toolsbox::any a(&y);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    const int y = 5;
+    toolsbox::any a(&y);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::ref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> b = std::make_shared<int>(5);
+    toolsbox::any a(b);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> b = std::make_shared<int>(5);
+    toolsbox::any a(std::ref(b));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_03)
+BOOST_AUTO_TEST_CASE(test_arg_call_smart_int)
 {
-  toolsbox::any v = 5;
-
+  typedef const int* type;
   std::string msg;
-  luacxx::check_arg_call<const int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<const int*>(v));
+
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = y;
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = std::ref(y);
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = std::cref(y);
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_04)
+BOOST_AUTO_TEST_CASE(test_arg_call_int)
 {
-  toolsbox::any v = 5;
-
+  typedef int type;
   std::string msg;
-  luacxx::check_arg_call<int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<int*>(v));
+
+  {
+    int y = 5;
+    toolsbox::any a(y);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int y = 5;
+    toolsbox::any a(std::ref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(o);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::ref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = y;
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = std::ref(y);
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_05)
+BOOST_AUTO_TEST_CASE(test_arg_call_const_int)
 {
-  toolsbox::any v = 5;
-
+  typedef const int type;
   std::string msg;
-  luacxx::check_arg_call<const int>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<const int>(v));
-}
 
-BOOST_AUTO_TEST_CASE(test_arg_call_pint_01)
-{
-  int tmp = 5;
-  toolsbox::any v = &tmp;
+  {
+    int y = 5;
+    toolsbox::any a(y);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<int*>(v));
-}
+  {
+    int y = 5;
+    toolsbox::any a(std::ref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_pint_02)
-{
-  int tmp = 5;
-  toolsbox::any v = &tmp;
+  {
+    int y = 5;
+    toolsbox::any a(std::cref(y));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<const int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<const int*>(v));
-}
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(o);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_pint_03)
-{
-  int tmp = 5;
-  toolsbox::any v = &tmp;
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::ref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<int>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<int>(v));
-}
+  {
+    int  y = 5;
+    int* o = &y;
+    toolsbox::any a(std::cref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_pint_04)
-{
-  int tmp = 5;
-  toolsbox::any v = &tmp;
+  {
+    int        y = 5;
+    const int* o = &y;
+    toolsbox::any a(o);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<int&>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<int&>(v));
-}
+  {
+    int        y = 5;
+    const int* o = &y;
+    toolsbox::any a(std::ref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_pint_05)
-{
-  int tmp = 5;
-  toolsbox::any v = &tmp;
+  {
+    int        y = 5;
+    const int* o = &y;
+    toolsbox::any a(std::cref(o));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<const int&>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<const int&>(v));
-}
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = y;
 
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_01)
-{
-  toolsbox::any v = std::make_shared<int>(5);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<int*>(v));
-}
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = std::ref(y);
 
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_02)
-{
-  toolsbox::any v = std::make_shared<int>(5);
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 
-  std::string msg;
-  luacxx::check_arg_call<int>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<int>(v));
-}
+  {
+    std::shared_ptr<int> y = std::make_shared<int>(5);
+    toolsbox::any a = std::cref(y);
 
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_03)
-{
-  toolsbox::any v = std::make_shared<int>(5);
-
-  std::string msg;
-  luacxx::check_arg_call<int&>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<int&>(v));
-}
-
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_04)
-{
-  toolsbox::any v = std::make_shared<int>(5);
-
-  std::string msg;
-  luacxx::check_arg_call<const int*>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, *luacxx::cast_arg_call<const int*>(v));
-}
-
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_05)
-{
-  toolsbox::any v = std::make_shared<int>(5);
-
-  std::string msg;
-  luacxx::check_arg_call<const int>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<const int>(v));
-}
-
-BOOST_AUTO_TEST_CASE(test_arg_call_sint_06)
-{
-  toolsbox::any v = std::make_shared<int>(5);
-
-  std::string msg;
-  luacxx::check_arg_call<const int&>(msg, v);
-  BOOST_REQUIRE(msg.empty());
-  BOOST_CHECK_EQUAL(5, luacxx::cast_arg_call<const int&>(v));
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(luacxx::cast_arg_call<type>(a) == 5);
+  }
 }
