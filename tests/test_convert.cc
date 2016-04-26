@@ -105,7 +105,6 @@ namespace
   }
 }
 
-
 BOOST_AUTO_TEST_CASE(convert_from_basic_type)
 {
   luacxx::lookup_type lookup;
@@ -268,6 +267,13 @@ BOOST_AUTO_TEST_CASE(convert_to_basic_type)
 
 namespace
 {
+  template <class T> using default_vector = std::vector<T>;
+  template <class T> using default_list   = std::list<T>;
+  template <class T> using default_set    = std::set<T>;
+}
+
+namespace
+{
   template <template <class T> class Container> void convert_to_unary_container()
   {
     luacxx::lookup_type lookup;
@@ -357,10 +363,6 @@ namespace
       BOOST_CHECK_EQUAL("t'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", lua_stack_dump(state));
     }
   }
-
-  template <class T> using default_vector = std::vector<T>;
-  template <class T> using default_list   = std::list<T>;
-  template <class T> using default_set    = std::set<T>;
 }
 
 BOOST_AUTO_TEST_CASE(convert_to_vector)
@@ -377,3 +379,131 @@ BOOST_AUTO_TEST_CASE(convert_to_set)
 {
   convert_to_unary_container<default_set>();
 }
+
+namespace
+{
+  template <template <class T> class Container> void convert_from_unary_container()
+  {
+    luacxx::lookup_type lookup;
+    lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
+    lookup.set<std::string>(std::make_shared<luacxx::string_type_info<std::string>>());
+    lookup.set<int>(std::make_shared<luacxx::integer_type_info<int>>());
+    lookup.set<double>(std::make_shared<luacxx::number_type_info<double>>());
+
+    {
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      Container<int>      wanted = {1, 2, 4};
+
+      lua_newtable(state);
+      int idx = 1;
+      for(int v : wanted)
+      {
+        lua_pushinteger(state, idx++);
+        lua_pushinteger(state, v);
+        lua_settable(state, -3);
+      }
+
+      policy.get_or_create_sub_node(luacxx::node_container_unary);
+
+      BOOST_CHECK(luacxx::convert_from<Container<int>>(state, lookup, 1, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_REQUIRE(any.is<Container<int>>());
+      BOOST_CHECK(any.as<Container<int>>() == wanted);
+    }
+
+    {
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      Container<double>      wanted = {1.5, 2, 4.9};
+
+      lua_newtable(state);
+      int idx = 1;
+      for(double v : wanted)
+      {
+        lua_pushinteger(state, idx++);
+        lua_pushnumber(state, v);
+        lua_settable(state, -3);
+      }
+
+      policy.get_or_create_sub_node(luacxx::node_container_unary);
+
+      BOOST_CHECK(luacxx::convert_from<Container<double>>(state, lookup, 1, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_REQUIRE(any.is<Container<double>>());
+      BOOST_CHECK(any.as<Container<double>>() == wanted);
+    }
+
+    {
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      Container<bool>      wanted = {false, true};
+
+      lua_newtable(state);
+      int idx = 1;
+      for(bool v : wanted)
+      {
+        lua_pushinteger(state, idx++);
+        lua_pushboolean(state, v);
+        lua_settable(state, -3);
+      }
+
+      policy.get_or_create_sub_node(luacxx::node_container_unary);
+
+      BOOST_CHECK(luacxx::convert_from<Container<bool>>(state, lookup, 1, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_REQUIRE(any.is<Container<bool>>());
+      BOOST_CHECK(any.as<Container<bool>>() == wanted);
+    }
+
+    {
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      Container<std::string>  wanted = {"grgr", "poiu", "rr"};
+
+      lua_newtable(state);
+      int idx = 1;
+      for(std::string v : wanted)
+      {
+        lua_pushinteger(state, idx++);
+        lua_pushstring(state, v.c_str());
+        lua_settable(state, -3);
+      }
+
+      policy.get_or_create_sub_node(luacxx::node_container_unary);
+
+      BOOST_CHECK(luacxx::convert_from<Container<std::string>>(state, lookup, 1, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_REQUIRE(any.is<Container<std::string>>());
+      BOOST_CHECK(any.as<Container<std::string>>() == wanted);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(convert_from_vector)
+{
+  convert_from_unary_container<default_vector>();
+}
+
+BOOST_AUTO_TEST_CASE(convert_from_list)
+{
+  convert_from_unary_container<default_list>();
+}
+
+BOOST_AUTO_TEST_CASE(convert_from_set)
+{
+  convert_from_unary_container<default_set>();
+}
+

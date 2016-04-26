@@ -74,7 +74,7 @@ namespace luacxx
           const policy_node& sub_node = policy.get_sub_node(node_container_unary);
           while (lua_next(state, idx) && error_msg.empty())
           {
-            value_type elt;
+            variable_type elt;
             convert_from<value_type>(state, registry, lua_gettop(state), elt, error_msg, sub_node);
             if(error_msg.empty() && !check_arg_call<value_type>(error_msg, elt))
             {
