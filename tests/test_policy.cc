@@ -73,6 +73,9 @@ BOOST_AUTO_TEST_CASE(policy_02)
   const luacxx::parameter_policy::variable_type& default_value1 = param1.get_default_value();
   const luacxx::parameter_policy::variable_type& default_value2 = param2.get_default_value();
 
-  BOOST_CHECK_EQUAL(std::to_string(default_value1), "5");
-  BOOST_CHECK_EQUAL(std::to_string(default_value2), "blabla");
+  BOOST_REQUIRE(default_value1.is<int>());
+  BOOST_REQUIRE(default_value2.is<std::string>());
+
+  BOOST_CHECK_EQUAL(default_value1.as<int>(), 5);
+  BOOST_CHECK_EQUAL(default_value2.as<std::string>(), "blabla");
 }

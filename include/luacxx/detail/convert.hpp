@@ -96,11 +96,19 @@ namespace luacxx
         if(!check_arg_call<type>(error_msg, var))
         {
           const policy_node& sub_node = policy.get_sub_node(node_container_unary);
-          for(auto& elt : cast_arg_call<type>(var))
+          for(value_type elt : cast_arg_call<type>(var))
           {
             lua_pushinteger(state, index++);
-            convert_to<value_type>(state, registry, std::ref(elt), error_msg, sub_node);
-            lua_settable(state, -3);
+            variable_type elt_any  = std::ref(elt);
+            convert_to<value_type>(state, registry, elt_any, error_msg, sub_node);
+            if(error_msg.empty())
+            {
+              lua_settable(state, -3);
+            }
+            else
+            {
+              break;
+            }
           }
         }
       }
@@ -162,8 +170,10 @@ namespace luacxx
           const policy_node& value_node = policy.get_sub_node(node_container_binary_value);
           for(auto& elt : cast_arg_call<type>(var))
           {
-            convert_to<key_type>  (state, registry, std::ref(elt.first),  error_msg, key_node);
-            convert_to<value_type>(state, registry, std::ref(elt.second), error_msg, value_node);
+            variable_type first_any  = std::ref(elt.first);
+            variable_type second_any = std::ref(elt.second);
+            convert_to<key_type>  (state, registry, first_any,  error_msg, key_node);
+            convert_to<value_type>(state, registry, second_any, error_msg, value_node);
             lua_settable(state, -3);
           }
         }
