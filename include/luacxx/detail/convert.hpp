@@ -43,8 +43,8 @@ namespace luacxx
       }
 
       static void to(state_type state, const lookup_type& registry, variable_type& var, std::string& error_msg, const policy_node& policy)
-      {
-        const type_info<type>& type_info = registry.template get<type>();
+      {        
+        const type_info<type>& type_info = registry.template get<type>();        
         if(type_info.valid())
         {
           type_info.to_lua(state, var, error_msg, policy);
@@ -72,11 +72,11 @@ namespace luacxx
           type &tmp = var.as<type>();
           std::insert_iterator<type> inserter(tmp, std::begin(tmp));
           lua_pushnil(state);
-          const policy_node& sub_node = policy.get_sub_node(node_container_unary);
+          const policy_node& data_policy = policy.get_sub_node(node_container_unary);
           while (lua_next(state, idx) && error_msg.empty())
           {
             variable_type elt;
-            convert_from<value_type>(state, registry, lua_gettop(state), elt, error_msg, sub_node);
+            convert_from<value_type>(state, registry, lua_gettop(state), elt, error_msg, data_policy);
             if(error_msg.empty() && !check_arg_call<value_type>(error_msg, elt))
             {
               inserter = cast_arg_call<value_type>(elt);
@@ -96,12 +96,12 @@ namespace luacxx
         lua_newtable(state);
         if(!check_arg_call<type>(error_msg, var))
         {
-          const policy_node& sub_node = policy.get_sub_node(node_container_unary);
+          const policy_node& data_policy = policy.get_sub_node(node_container_unary);
           for(value_type elt : cast_arg_call<type>(var))
           {
             lua_pushinteger(state, index++);
             variable_type elt_any  = std::ref(elt);
-            convert_to<value_type>(state, registry, elt_any, error_msg, sub_node);
+            convert_to<value_type>(state, registry, elt_any, error_msg, data_policy);
             if(error_msg.empty())
             {
               lua_settable(state, -3);
@@ -135,18 +135,18 @@ namespace luacxx
           var       = type();
           type &tmp = var.as<type>();
           std::insert_iterator<type> inserter(tmp, std::begin(tmp));
-          const policy_node& key_node   = policy.get_sub_node(node_container_binary_key);
-          const policy_node& value_node = policy.get_sub_node(node_container_binary_value);
+          const policy_node& key_policy   = policy.get_sub_node(node_container_binary_key);
+          const policy_node& value_policy = policy.get_sub_node(node_container_binary_value);
           lua_pushnil(state);
           while (lua_next(state, idx) && error_msg.empty())
           {
-            key_type   key;
-            value_type value;
+            variable_type key;
+            variable_type value;
 
-            if(!convert_from<value_type>(state, registry, lua_gettop(state), value, error_msg, value_node))
+            if(convert_from<value_type>(state, registry, lua_gettop(state), value, error_msg, value_policy))
             {
               lua_pushvalue(state, lua_gettop(state));
-              convert_from<key_type>(state, registry, lua_gettop(state), key,   error_msg, key_node);
+              convert_from<key_type>(state, registry, lua_gettop(state), key, error_msg, key_policy);
             }
 
             if(error_msg.empty() && !check_arg_call<key_type>(error_msg, key) && !check_arg_call<value_type>(error_msg, value))
@@ -167,14 +167,14 @@ namespace luacxx
         lua_newtable(state);
         if(!check_arg_call<type>(error_msg, var))
         {
-          const policy_node& key_node   = policy.get_sub_node(node_container_binary_key);
-          const policy_node& value_node = policy.get_sub_node(node_container_binary_value);
+          const policy_node& key_policy   = policy.get_sub_node(node_container_binary_key);
+          const policy_node& value_policy = policy.get_sub_node(node_container_binary_value);
           for(auto& elt : cast_arg_call<type>(var))
           {
             variable_type first(std::cref(elt.first));
             variable_type second(std::ref(elt.second));
-            if(convert_to<key_type>  (state, registry, first,  error_msg, key_node)
-              && convert_to<value_type>(state, registry, second, error_msg, value_node))
+            if(convert_to<key_type>  (state, registry, first,  error_msg, key_policy)
+              && convert_to<value_type>(state, registry, second, error_msg, value_policy))
             {
               lua_settable(state, -3);
             }
