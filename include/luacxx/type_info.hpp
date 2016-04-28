@@ -9,7 +9,6 @@
 # include <luacxx/policy.hpp>
 
 # include <lua.hpp>
-# include <iostream>
 
 namespace luacxx
 {

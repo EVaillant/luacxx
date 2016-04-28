@@ -43,7 +43,7 @@ namespace luacxx
 
         static bool check(const toolsbox::any& value)
         {
-          functor_type fct = get_functor_(value.get_id());
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
           return fct != nullptr;
         }
 
@@ -119,7 +119,7 @@ namespace luacxx
 
         static bool check(const toolsbox::any& value)
         {
-          functor_type fct = get_functor_(value.get_id());
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
           return fct != nullptr;
         }
 
@@ -193,7 +193,7 @@ namespace luacxx
 
         static bool check(const toolsbox::any& value)
         {
-          functor_type fct = get_functor_(value.get_id());
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
           return fct != nullptr;
         }
 
@@ -272,7 +272,7 @@ namespace luacxx
 
         static bool check(const toolsbox::any& value)
         {
-          functor_type fct = get_functor_(value.get_id());
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
           return fct != nullptr;
         }
 
@@ -342,7 +342,7 @@ namespace luacxx
 
         static bool check(const toolsbox::any& value)
         {
-          functor_type fct = get_functor_(value.get_id());
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
           return fct != nullptr;
         }
 
