@@ -9,101 +9,9 @@
 #include <luacxx/type_info.hpp>
 #include <luacxx/policy.hpp>
 
-namespace
-{
-  class lua_state_guard
-  {
-    public:
-      lua_state_guard()
-      {
-        state_ = luaL_newstate();
-      }
+#include "helper.hpp"
 
-      operator lua_State*()
-      {
-        return state_;
-      }
-
-      ~lua_state_guard()
-      {
-        lua_close(state_);
-      }
-    private:
-      lua_State* state_;
-  };
-
-  std::string lua_stack_dump(lua_State *state);
-  void lua_stack_dump(lua_State *state, std::ostream& stream);
-  void lua_stack_dump(lua_State *state, int i, std::ostream& stream);
-
-  void lua_stack_dump(lua_State *state, int i, std::ostream& stream)
-  {
-    int t = lua_type(state, i);
-    switch (t)
-    {
-      case LUA_TSTRING:  /* strings */
-        stream << "s'" << lua_tostring(state, i) << "'";
-        break;
-
-      case LUA_TBOOLEAN:  /* booleans */
-        stream << "b'" << (lua_toboolean(state, i) ? "true" : "false") << "'";
-        break;
-
-      case LUA_TNUMBER:  /* numbers or integer */
-        if(lua_isinteger(state, i))
-        {
-          stream << "i'" << lua_tointeger(state, i) << "'";
-        }
-        else if(lua_isnumber(state, i))
-        {
-          stream << "n'" << lua_tonumber(state, i) << "'";
-        }
-        break;
-
-      case LUA_TTABLE:  /* table */
-        stream << "t'";
-        lua_pushnil(state);
-        while(lua_next(state, i))
-        {
-          lua_pushvalue(state, -2);
-          stream << "(";
-          lua_stack_dump(state, lua_gettop(state), stream);
-          stream << ",";
-          lua_stack_dump(state, lua_gettop(state) - 1, stream);
-          stream << ")";
-          lua_pop(state, 2);
-        }
-        stream << "'";
-        break;
-
-      default:  /* other values */
-        stream << "?'" << lua_typename(state, t) << "'";
-        break;
-
-    }
-  }
-
-  void lua_stack_dump(lua_State *state, std::ostream& stream)
-  {
-    int i;
-    int top = lua_gettop(state);
-    for (i = 1; i <= top; i++)
-    {
-      lua_stack_dump(state, i, stream);
-      if( i != top)
-      {
-        stream << " ";
-      }
-    }
-  }
-
-  std::string lua_stack_dump(lua_State *state)
-  {
-    std::ostringstream stream;
-    lua_stack_dump(state, stream);
-    return stream.str();
-  }
-}
+# include <iostream>
 
 BOOST_AUTO_TEST_CASE(convert_from_basic_type)
 {
@@ -267,9 +175,10 @@ BOOST_AUTO_TEST_CASE(convert_to_basic_type)
 
 namespace
 {
-  template <class T> using default_vector = std::vector<T>;
-  template <class T> using default_list   = std::list<T>;
-  template <class T> using default_set    = std::set<T>;
+  template <class T> using default_vector       = std::vector<T>;
+  template <class T> using default_list         = std::list<T>;
+  template <class T> using default_set          = std::set<T>;
+  template <class K, class V> using default_map = std::map<K, V>;
 }
 
 namespace
@@ -505,5 +414,211 @@ BOOST_AUTO_TEST_CASE(convert_from_list)
 BOOST_AUTO_TEST_CASE(convert_from_set)
 {
   convert_from_unary_container<default_set>();
+}
+
+namespace
+{
+  template <template <class K, class V> class Container> void convert_to_binary_container()
+  {
+    luacxx::lookup_type lookup;
+    lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
+    lookup.set<std::string>(std::make_shared<luacxx::string_type_info<std::string>>());
+    lookup.set<const char*>(std::make_shared<luacxx::string_type_info<const char*>>());
+    lookup.set<int>(std::make_shared<luacxx::integer_type_info<int>>());
+    lookup.set<double>(std::make_shared<luacxx::number_type_info<double>>());
+
+    {
+      typedef Container<int, std::string> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1, "aaa"}, {5, "888"}, {45, "uiyui"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<double, std::string> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1.5, "aaa"}, {5.8, "888"}, {45.9, "uiyui"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(n'5.8',s'888')(n'1.5',s'aaa')(n'45.9',s'uiyui')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<bool, std::string> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{true, "aaa"}, {false, "888"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(b'false',s'888')(b'true',s'aaa')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<std::string, std::string> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{"1", "aaa"}, {"5", "888"}, {"45", "uiyui"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<const char*, std::string> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{"1", "aaa"}, {"5", "888"}, {"45", "uiyui"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<int, const char*> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1, "aaa"}, {5, "888"}, {45, "uiyui"}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<int, bool> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1, true}, {5, false}, {45, true}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(i'5',b'false')(i'45',b'true')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<int, int> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1, 9}, {5, 888}, {45, 66}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(i'45',i'66')(i'5',i'888')(i'1',i'9')'", lua_stack_dump(state));
+    }
+
+    {
+      typedef Container<int, double> container_type;
+
+      lua_state_guard     state;
+      luacxx::policy_node policy;
+      toolsbox::any       any;
+      std::string         error_msg;
+
+      container_type    input_data = {{1, 5.9}, {5, 7.9}, {45, 8.5}};
+      any = input_data;
+
+      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
+      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
+
+      BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
+      BOOST_CHECK(error_msg.empty());
+      BOOST_CHECK_EQUAL("t'(i'1',n'5.9')(i'5',n'7.9')(i'45',n'8.5')'", lua_stack_dump(state));
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(convert_to_map)
+{
+  convert_to_binary_container<default_map>();
+}
+
+namespace
+{
+  template <template <class K, class V> class Container> void convert_from_binary_container()
+  {
+    luacxx::lookup_type lookup;
+    lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
+    lookup.set<std::string>(std::make_shared<luacxx::string_type_info<std::string>>());
+    lookup.set<int>(std::make_shared<luacxx::integer_type_info<int>>());
+    lookup.set<double>(std::make_shared<luacxx::number_type_info<double>>());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(convert_from_map)
+{
+  convert_from_binary_container<default_map>();
 }
 

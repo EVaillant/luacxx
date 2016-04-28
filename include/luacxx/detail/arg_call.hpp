@@ -79,18 +79,19 @@ namespace luacxx
               functor_type                convert;
           };
 
-          static const std::array<convert_table, 11> convert_tables = {{
-            {toolsbox::type_uid::get<underlying_type*>(),        self_type::convert_type_<underlying_type*>},
-            {toolsbox::type_uid::get<const underlying_type*>(),  self_type::convert_type_<const underlying_type*>},
-            {toolsbox::type_uid::get<const underlying_type*&>(), self_type::convert_type_<const underlying_type*&>},
-            {toolsbox::type_uid::get<underlying_type*&>(),       self_type::convert_type_<underlying_type*&>},
-            {toolsbox::type_uid::get<underlying_type* const&>(), self_type::convert_type_<underlying_type* const&>},
-            {toolsbox::type_uid::get<underlying_type>(),         self_type::convert_underlying_<underlying_type>},
-            {toolsbox::type_uid::get<underlying_type&>(),        self_type::convert_underlying_<underlying_type&>},
-            {toolsbox::type_uid::get<const underlying_type&>(),  self_type::convert_underlying_<const underlying_type&>},
-            {toolsbox::type_uid::get<shared_type>(),             self_type::convert_shared_<shared_type>},
-            {toolsbox::type_uid::get<const shared_type&>(),      self_type::convert_shared_<const shared_type&>},
-            {toolsbox::type_uid::get<shared_type&>(),            self_type::convert_shared_<shared_type&>}
+          static const std::array<convert_table, 12> convert_tables = {{
+            {toolsbox::type_uid::get<underlying_type*>(),              self_type::convert_type_<underlying_type*>},
+            {toolsbox::type_uid::get<const underlying_type*>(),        self_type::convert_type_<const underlying_type*>},
+            {toolsbox::type_uid::get<const underlying_type*&>(),       self_type::convert_type_<const underlying_type*&>},
+            {toolsbox::type_uid::get<const underlying_type* const&>(), self_type::convert_type_<const underlying_type* const&>},
+            {toolsbox::type_uid::get<underlying_type*&>(),             self_type::convert_type_<underlying_type*&>},
+            {toolsbox::type_uid::get<underlying_type* const&>(),       self_type::convert_type_<underlying_type* const&>},
+            {toolsbox::type_uid::get<underlying_type>(),               self_type::convert_underlying_<underlying_type>},
+            {toolsbox::type_uid::get<underlying_type&>(),              self_type::convert_underlying_<underlying_type&>},
+            {toolsbox::type_uid::get<const underlying_type&>(),        self_type::convert_underlying_<const underlying_type&>},
+            {toolsbox::type_uid::get<shared_type>(),                   self_type::convert_shared_<shared_type>},
+            {toolsbox::type_uid::get<const shared_type&>(),            self_type::convert_shared_<const shared_type&>},
+            {toolsbox::type_uid::get<shared_type&>(),                  self_type::convert_shared_<shared_type&>}
           }};
 
           assert(check_table(convert_tables));
