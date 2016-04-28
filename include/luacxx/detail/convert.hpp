@@ -11,6 +11,7 @@
 # include <list>
 # include <vector>
 # include <set>
+# include <map>
 
 # include <lua.hpp>
 
@@ -29,14 +30,14 @@ namespace luacxx
       typedef toolsbox::any variable_type;
 
       static void from(state_type state, const lookup_type& registry, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
-      {
+      {        
         const type_info<type>& type_info = registry.template get<type>();
         if(type_info.valid())
         {
           type_info.from_lua(state, idx, var, error_msg, policy);
         }
         else
-        {
+        {          
           error_msg = msg_error_type_not_supported;
         }
       }
@@ -170,11 +171,17 @@ namespace luacxx
           const policy_node& value_node = policy.get_sub_node(node_container_binary_value);
           for(auto& elt : cast_arg_call<type>(var))
           {
-            variable_type first_any  = std::ref(elt.first);
-            variable_type second_any = std::ref(elt.second);
-            convert_to<key_type>  (state, registry, first_any,  error_msg, key_node);
-            convert_to<value_type>(state, registry, second_any, error_msg, value_node);
-            lua_settable(state, -3);
+            variable_type first(std::cref(elt.first));
+            variable_type second(std::ref(elt.second));
+            if(convert_to<key_type>  (state, registry, first,  error_msg, key_node)
+              && convert_to<value_type>(state, registry, second, error_msg, value_node))
+            {
+              lua_settable(state, -3);
+            }
+            if(!error_msg.empty())
+            {
+              break;
+            }
           }
         }
       }

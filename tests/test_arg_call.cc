@@ -75,6 +75,15 @@ BOOST_AUTO_TEST_CASE(test_arg_call_const_int_ptr)
   }
 
   {
+    int  y = 5;
+    const int* o = &y;
+    toolsbox::any a(std::cref(o));
+
+    BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
+    BOOST_CHECK(*luacxx::cast_arg_call<type>(a) == 5);
+  }
+
+  {
     std::shared_ptr<int> b = std::make_shared<int>(5);
     toolsbox::any a(std::cref(b));
     BOOST_CHECK(!luacxx::check_arg_call<type>(msg, a));
@@ -133,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_arg_call_const_int_ptr)
 
 BOOST_AUTO_TEST_CASE(test_arg_call_smart_int)
 {
-  typedef const int* type;
+  typedef std::shared_ptr<int> type;
   std::string msg;
 
   {
