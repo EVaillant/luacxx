@@ -5,7 +5,3 @@
 
 #include <luacxx/request.hpp>
 
-BOOST_AUTO_TEST_CASE(request_from_lua_01)
-{
-}
-

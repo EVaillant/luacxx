@@ -1,9 +1,10 @@
 #ifndef LUACXX_POLICY_HPP
 # define LUACXX_POLICY_HPP
 
-# include <luacxx/detail/type_traits.hpp>
+# include <luacxx/type_traits.hpp>
 
 # include <toolsbox/any.hpp>
+
 # include <cassert>
 # include <utility>
 # include <unordered_map>
@@ -113,7 +114,7 @@ namespace luacxx
 
   template <class T> std::unique_ptr<parameter_policy> make_parameter_policy()
   {
-    return std::unique_ptr<parameter_policy>(new parameter_policy(detail::in_out_permission<T>::allow_in, detail::in_out_permission<T>::allow_out, detail::in_out_permission<T>::default_in, detail::in_out_permission<T>::default_out));
+    return std::unique_ptr<parameter_policy>(new parameter_policy(in_out_permission<T>::allow_in, in_out_permission<T>::allow_out, in_out_permission<T>::default_in, in_out_permission<T>::default_out));
   }
 
   /**

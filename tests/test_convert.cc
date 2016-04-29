@@ -3,10 +3,10 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <luacxx/convert.hpp>
+#include <luacxx/utility.hpp>
 
 #include <luacxx/lookup_type.hpp>
-#include <luacxx/type_info.hpp>
+#include <luacxx/basic_type_info.hpp>
 #include <luacxx/policy.hpp>
 
 #include "helper.hpp"
