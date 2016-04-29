@@ -1,11 +1,9 @@
 #ifndef LUACXX_REQUEST_HPP
 # define LUACXX_REQUEST_HPP
 
-# include <luacxx/convert.hpp>
 # include <luacxx/utility.hpp>
 # include <luacxx/policy.hpp>
 # include <luacxx/default_initializer.hpp>
-# include <luacxx/state.hpp>
 
 # include <utility>
 # include <tuple>
