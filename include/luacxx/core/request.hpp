@@ -1,9 +1,9 @@
-#ifndef LUACXX_REQUEST_HPP
-# define LUACXX_REQUEST_HPP
+#ifndef LUACXX_CORE_REQUEST_HPP
+# define LUACXX_CORE_REQUEST_HPP
 
-# include <luacxx/utility.hpp>
-# include <luacxx/policy.hpp>
-# include <luacxx/default_initializer.hpp>
+# include <luacxx/core/utility.hpp>
+# include <luacxx/core/policy.hpp>
+# include <luacxx/core/default_initializer.hpp>
 
 # include <utility>
 # include <tuple>

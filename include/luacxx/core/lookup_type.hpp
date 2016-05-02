@@ -1,8 +1,8 @@
-#ifndef LUACXX_LOOKUP_TYPE_HPP
-# define LUACXX_LOOKUP_TYPE_HPP
+#ifndef LUACXX_CORE_LOOKUP_TYPE_HPP
+# define LUACXX_CORE_LOOKUP_TYPE_HPP
 
 # include <toolsbox/type_uid.hpp>
-# include <luacxx/type_info.hpp>
+# include <luacxx/core/type_info.hpp>
 # include <unordered_map>
 
 namespace luacxx

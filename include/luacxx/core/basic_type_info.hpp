@@ -1,10 +1,10 @@
-#ifndef LUACXX_BASIC_TYPE_INFO_HPP
-# define LUACXX_BASIC_TYPE_INFO_HPP
+#ifndef LUACXX_CORE_BASIC_TYPE_INFO_HPP
+# define LUACXX_CORE_BASIC_TYPE_INFO_HPP
 
-# include <luacxx/type_info.hpp>
+# include <luacxx/core/type_info.hpp>
 
-# include <luacxx/utility.hpp>
-# include <luacxx/policy.hpp>
+# include <luacxx/core/utility.hpp>
+# include <luacxx/core/policy.hpp>
 
 # include <lua.hpp>
 

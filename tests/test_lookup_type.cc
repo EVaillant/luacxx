@@ -3,7 +3,7 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <luacxx/lookup_type.hpp>
+#include <luacxx/core/lookup_type.hpp>
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(luacxx::common_type_info::underlying_type);
 

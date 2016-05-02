@@ -3,10 +3,10 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <luacxx/request.hpp>
-#include <luacxx/lookup_type.hpp>
-#include <luacxx/basic_type_info.hpp>
-#include <luacxx/policy.hpp>
+#include <luacxx/core/request.hpp>
+#include <luacxx/core/lookup_type.hpp>
+#include <luacxx/core/basic_type_info.hpp>
+#include <luacxx/core/policy.hpp>
 
 #include "helper.hpp"
 

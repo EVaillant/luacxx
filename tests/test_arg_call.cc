@@ -3,7 +3,7 @@
 #include <boost/test/unit_test_suite.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <luacxx/utility.hpp>
+#include <luacxx/core/utility.hpp>
 
 BOOST_AUTO_TEST_CASE(test_arg_call_int_ptr)
 {
