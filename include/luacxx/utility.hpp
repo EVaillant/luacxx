@@ -42,6 +42,69 @@ namespace luacxx
       static_assert(sizeof(T) > 0, "only specialize must be instanced");
     };
 
+    template <> class arg_call<const char*, void>
+    {
+      public:
+        typedef const char* type;
+        typedef arg_call    self_type;
+        typedef type        return_type;
+
+        static bool check(const toolsbox::any& value)
+        {
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
+          return fct != nullptr;
+        }
+
+        static return_type convert(toolsbox::any& any)
+        {
+          assert(check(any));
+          functor_type fct = get_functor_(any.get_id());
+          return (*fct)(any);
+        }
+
+      private:
+        typedef return_type (*functor_type)(toolsbox::any&);
+
+        template <class U> static return_type convert_type_(toolsbox::any& any)
+        {
+          return any.as<U>();
+        }
+
+        template <class U> static return_type convert_string_(toolsbox::any& any)
+        {
+          return any.as<U>().c_str();
+        }
+
+        static functor_type get_functor_(toolsbox::type_uid::id_type id)
+        {
+          struct convert_table {
+              toolsbox::type_uid::id_type id;
+              functor_type                convert;
+          };
+
+          static const std::array<convert_table, 6> convert_tables = {{
+            {toolsbox::type_uid::get<type>(),               self_type::convert_type_<type>},
+            {toolsbox::type_uid::get<type&>(),              self_type::convert_type_<type&>},
+            {toolsbox::type_uid::get<const type&>(),        self_type::convert_type_<const type&>},
+            {toolsbox::type_uid::get<std::string>(),        self_type::convert_string_<std::string>},
+            {toolsbox::type_uid::get<std::string&>(),       self_type::convert_string_<std::string&>},
+            {toolsbox::type_uid::get<const std::string&>(), self_type::convert_string_<const std::string&>}
+          }};
+
+          assert(check_table(convert_tables));
+
+          for(const convert_table& table : convert_tables)
+          {
+            if(id == table.id)
+            {
+              return table.convert;
+            }
+          }
+
+          return nullptr;
+        }
+    };
+
     template <class T> class arg_call<T*, typename std::enable_if<std::is_const<T>::value>::type>
     {
       public:
