@@ -1,12 +1,12 @@
-#ifndef LUACXX_UTILITY_HPP
-# define LUACXX_UTILITY_HPP
+#ifndef LUACXX_CORE_UTILITY_HPP
+# define LUACXX_CORE_UTILITY_HPP
 
 # include <toolsbox/any.hpp>
 
-# include <luacxx/constant.hpp>
-# include <luacxx/lookup_type.hpp>
-# include <luacxx/policy.hpp>
-# include <luacxx/type_traits.hpp>
+# include <luacxx/core/constant.hpp>
+# include <luacxx/core/lookup_type.hpp>
+# include <luacxx/core/policy.hpp>
+# include <luacxx/core/type_traits.hpp>
 
 # include <list>
 # include <vector>

@@ -1,7 +1,7 @@
-#ifndef LUACXX_POLICY_HPP
-# define LUACXX_POLICY_HPP
+#ifndef LUACXX_CORE_POLICY_HPP
+# define LUACXX_CORE_POLICY_HPP
 
-# include <luacxx/type_traits.hpp>
+# include <luacxx/core/type_traits.hpp>
 
 # include <toolsbox/any.hpp>
 

@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include <luacxx/policy.hpp>
+#include <luacxx/core/policy.hpp>
 
 namespace
 {

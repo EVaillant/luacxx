@@ -1,9 +1,9 @@
-#ifndef LUACXX_TYPE_INFO_HPP
-# define LUACXX_TYPE_INFO_HPP
+#ifndef LUACXX_CORE_TYPE_INFO_HPP
+# define LUACXX_CORE_TYPE_INFO_HPP
 
 # include <toolsbox/any.hpp>
-# include <luacxx/constant.hpp>
-# include <luacxx/type_traits.hpp>
+# include <luacxx/core/constant.hpp>
+# include <luacxx/core/type_traits.hpp>
 
 namespace luacxx
 {

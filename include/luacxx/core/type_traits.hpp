@@ -1,5 +1,5 @@
-#ifndef LUACXX_TYPE_TRAITS_HPP
-# define LUACXX_TYPE_TRAITS_HPP
+#ifndef LUACXX_CORE_TYPE_TRAITS_HPP
+# define LUACXX_CORE_TYPE_TRAITS_HPP
 
 # include <memory>
 

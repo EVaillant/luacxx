@@ -1,5 +1,5 @@
-#ifndef LUACXX_CONSTANT_HPP
-# define LUACXX_CONSTANT_HPP
+#ifndef LUACXX_CORE_CONSTANT_HPP
+# define LUACXX_CORE_CONSTANT_HPP
 
 namespace luacxx
 {
