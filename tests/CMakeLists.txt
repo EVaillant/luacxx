@@ -17,4 +17,16 @@ if (Boost_FOUND)
   )
   add_test(test_core test_core)
 
+  add_executable(
+    test_binding
+    test_binding.cc
+    test_module.cc
+  )
+  target_link_libraries(
+    test_binding
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${LUA_LIBRARY}
+  )
+  add_test(test_binding test_binding)
+
 endif (Boost_FOUND)
