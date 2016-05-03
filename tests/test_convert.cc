@@ -11,7 +11,7 @@
 
 #include "helper.hpp"
 
-BOOST_AUTO_TEST_CASE(convert_from_basic_type)
+BOOST_AUTO_TEST_CASE( convert_from_basic_type )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(convert_from_basic_type)
   }
 }
 
-BOOST_AUTO_TEST_CASE(convert_to_basic_type)
+BOOST_AUTO_TEST_CASE( convert_to_basic_type )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
@@ -272,17 +272,17 @@ namespace
   }
 }
 
-BOOST_AUTO_TEST_CASE(convert_to_vector)
+BOOST_AUTO_TEST_CASE( convert_to_vector )
 {
   convert_to_unary_container<default_vector>();
 }
 
-BOOST_AUTO_TEST_CASE(convert_to_list)
+BOOST_AUTO_TEST_CASE( convert_to_list )
 {
   convert_to_unary_container<default_list>();
 }
 
-BOOST_AUTO_TEST_CASE(convert_to_set)
+BOOST_AUTO_TEST_CASE( convert_to_set )
 {
   convert_to_unary_container<default_set>();
 }
@@ -399,17 +399,17 @@ namespace
   }
 }
 
-BOOST_AUTO_TEST_CASE(convert_from_vector)
+BOOST_AUTO_TEST_CASE( convert_from_vector )
 {
   convert_from_unary_container<default_vector>();
 }
 
-BOOST_AUTO_TEST_CASE(convert_from_list)
+BOOST_AUTO_TEST_CASE( convert_from_list )
 {
   convert_from_unary_container<default_list>();
 }
 
-BOOST_AUTO_TEST_CASE(convert_from_set)
+BOOST_AUTO_TEST_CASE( convert_from_set )
 {
   convert_from_unary_container<default_set>();
 }
@@ -598,7 +598,7 @@ namespace
   }
 }
 
-BOOST_AUTO_TEST_CASE(convert_to_map)
+BOOST_AUTO_TEST_CASE( convert_to_map )
 {
   convert_to_binary_container<default_map>();
 }
@@ -812,7 +812,7 @@ namespace
   }
 }
 
-BOOST_AUTO_TEST_CASE(convert_from_map)
+BOOST_AUTO_TEST_CASE( convert_from_map )
 {
   convert_from_binary_container<default_map>();
 }

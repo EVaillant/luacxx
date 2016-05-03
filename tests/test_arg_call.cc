@@ -5,7 +5,7 @@
 
 #include <luacxx/core/utility.hpp>
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int_ptr)
+BOOST_AUTO_TEST_CASE( arg_call_int_ptr )
 {
   typedef int* type;
   std::string msg;
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_arg_call_int_ptr)
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_const_int_ptr)
+BOOST_AUTO_TEST_CASE( arg_call_const_int_ptr )
 {
   typedef const int* type;
   std::string msg;
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(test_arg_call_const_int_ptr)
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_smart_int)
+BOOST_AUTO_TEST_CASE( arg_call_smart_int )
 {
   typedef std::shared_ptr<int> type;
   std::string msg;
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test_arg_call_smart_int)
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_int)
+BOOST_AUTO_TEST_CASE( arg_call_int )
 {
   typedef int type;
   std::string msg;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(test_arg_call_int)
   }
 }
 
-BOOST_AUTO_TEST_CASE(test_arg_call_const_int)
+BOOST_AUTO_TEST_CASE( arg_call_const_int )
 {
   typedef const int type;
   std::string msg;

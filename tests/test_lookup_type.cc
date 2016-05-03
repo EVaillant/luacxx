@@ -48,7 +48,7 @@ namespace
   };
 }
 
-BOOST_AUTO_TEST_CASE(lookup_type_01)
+BOOST_AUTO_TEST_CASE( lookup_type_01 )
 {
   luacxx::lookup_type lookup;
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(lookup_type_01)
   BOOST_CHECK(!lookup.exist<int>());
 }
 
-BOOST_AUTO_TEST_CASE(lookup_type_02)
+BOOST_AUTO_TEST_CASE( lookup_type_02 )
 {
   luacxx::lookup_type lookup;
 

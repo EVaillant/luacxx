@@ -10,7 +10,7 @@
 
 #include "helper.hpp"
 
-BOOST_AUTO_TEST_CASE(request_from_01)
+BOOST_AUTO_TEST_CASE( request_from_01 )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(request_from_01)
   }
 }
 
-BOOST_AUTO_TEST_CASE(request_from_02)
+BOOST_AUTO_TEST_CASE( request_from_02 )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(request_from_02)
   }
 }
 
-BOOST_AUTO_TEST_CASE(request_from_03)
+BOOST_AUTO_TEST_CASE( request_from_03 )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
