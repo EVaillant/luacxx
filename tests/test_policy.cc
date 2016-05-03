@@ -14,7 +14,7 @@ namespace
   };
 }
 
-BOOST_AUTO_TEST_CASE(policy_01)
+BOOST_AUTO_TEST_CASE( policy_01 )
 {
   Data data;
   luacxx::policy_node node;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(policy_01)
   BOOST_CHECK( !param2.is_output() );
 }
 
-BOOST_AUTO_TEST_CASE(policy_02)
+BOOST_AUTO_TEST_CASE( policy_02 )
 {
   Data data;
   luacxx::policy_node node;

@@ -32,7 +32,7 @@ namespace
   };
 }
 
-BOOST_AUTO_TEST_CASE(module_01)
+BOOST_AUTO_TEST_CASE( module_01 )
 {
   luacxx::lookup_type lookup;
   lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE(module_01)
     lua_state_guard       state;
     luacxx::global_module module;
 
-    luaL_openlibs(state);
+    luaopen_base(state);
+    luaopen_package(state);
 
     std::unique_ptr<const_integer_field> c1 = std::make_unique<const_integer_field>(5);
     std::unique_ptr<const_integer_field> c2 = std::make_unique<const_integer_field>(20);
