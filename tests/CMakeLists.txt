@@ -21,6 +21,7 @@ if (Boost_FOUND)
     test_binding
     test_binding.cc
     test_module.cc
+    test_global.cc
   )
   target_link_libraries(
     test_binding

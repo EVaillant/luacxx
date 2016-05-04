@@ -64,6 +64,30 @@ namespace luacxx
         module_.bind(state_);
       }
 
+      inline std::pair<bool, std::string> do_file(const std::string& name)
+      {
+        assert(state_);
+        std::string msg;
+        bool     status = (luaL_dofile(state_, name.c_str()) == LUA_OK);
+        if(!status)
+        {
+          msg = lua_tostring(state_, -1);
+        }
+        return std::make_pair(status, msg);
+      }
+
+      inline std::pair<bool, std::string> do_string(const std::string& string)
+      {
+        assert(state_);
+        std::string msg;
+        bool     status = (luaL_dostring(state_, string.c_str()) == LUA_OK);
+        if(!status)
+        {
+          msg = lua_tostring(state_, -1);
+        }
+        return std::make_pair(status, msg);
+      }
+
     protected:
       template <class T0, class ... T> void fill_lookup_type_integer_(typename std::enable_if<(sizeof...(T) != 0), int>::type = 0)
       {
@@ -84,7 +108,7 @@ namespace luacxx
         lookup_type_.set<float>(std::make_shared<luacxx::number_type_info<float>>());
         lookup_type_.set<double>(std::make_shared<luacxx::number_type_info<double>>());
         lookup_type_.set<long double>(std::make_shared<luacxx::number_type_info<long double>>());
-        fill_lookup_type_integer_<uint8_t, int8_t, uint16_t, uint16_t, uint32_t, uint32_t, uint64_t, uint64_t>();
+        fill_lookup_type_integer_<uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t>();
       }
 
       inline void open_lib_()
