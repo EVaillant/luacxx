@@ -11,6 +11,8 @@
 
 namespace luacxx
 {
+  constexpr auto root_module_name = "";
+
   class module : public bindable
   {
     public:
@@ -66,7 +68,7 @@ namespace luacxx
     public:
       inline global_module()
       {
-        modules_.insert(std::make_pair("", this));
+        modules_.insert(std::make_pair(root_module_name, this));
       }
 
       inline module& get_module(const std::string &name)
