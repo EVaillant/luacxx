@@ -130,17 +130,38 @@ namespace luacxx
 
       inline void open_lib_()
       {
-        luaopen_base(state_);
-        if(lt_coroutine & flags_) luaopen_coroutine(state_);
-        if(lt_table & flags_)     luaopen_table(state_);
-        if(lt_io & flags_)        luaopen_io(state_);
-        if(lt_os & flags_)        luaopen_os(state_);
-        if(lt_string & flags_)    luaopen_string(state_);
-        if(lt_utf8 & flags_)      luaopen_utf8(state_);
-        if(lt_bit32 & flags_)     luaopen_bit32(state_);
-        if(lt_math & flags_)      luaopen_math(state_);
-        if(lt_debug & flags_)     luaopen_debug(state_);
-        if(lt_package & flags_)   luaopen_package(state_);
+        struct table_lib
+        {
+          bool          load;
+          const char*   name;
+          lua_CFunction func;
+        };
+
+        const table_lib libs[] = {
+          {true, "_G", luaopen_base},
+          {(lt_package & flags_),   LUA_LOADLIBNAME, luaopen_package},
+          {(lt_coroutine & flags_), LUA_COLIBNAME,   luaopen_coroutine},
+          {(lt_table & flags_),     LUA_TABLIBNAME,  luaopen_table},
+          {(lt_io & flags_),        LUA_IOLIBNAME,   luaopen_io},
+          {(lt_os & flags_),        LUA_OSLIBNAME,   luaopen_os},
+          {(lt_string & flags_),    LUA_STRLIBNAME,  luaopen_string},
+          {(lt_math & flags_),      LUA_MATHLIBNAME, luaopen_math},
+          {(lt_utf8 & flags_),      LUA_UTF8LIBNAME, luaopen_utf8},
+          {(lt_debug & flags_),     LUA_DBLIBNAME,   luaopen_debug},
+          #if defined(LUA_COMPAT_BITLIB)
+          {(lt_bit32 & flags_),     LUA_BITLIBNAME,  luaopen_bit32},
+          #endif
+          {false, nullptr, nullptr}
+        };
+
+        for(const table_lib& lib : libs)
+        {
+          if(lib.load)
+          {
+            luaL_requiref(state_, lib.name, lib.func, 1);
+            lua_pop(state_, 1);
+          }
+        }
       }
 
     private:

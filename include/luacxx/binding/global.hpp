@@ -13,10 +13,12 @@ namespace luacxx
   {
     public:
       typedef T type;
+      typedef arg_policy<> policy_type;
 
       template <class U> wrapper_global(lookup_type& lookup, U&& value)
         : value_(std::forward<U>(value))
         , lookup_(lookup)
+        , policy_(make_arg_policy<type>(node_))
       {
       }
 
@@ -24,18 +26,19 @@ namespace luacxx
       {
         toolsbox::any var = std::ref(value_);
         std::string   error_msg;
-        return convert_to<type&>(state, lookup_, var, error_msg, policy_);
+        return convert_to<type&>(state, lookup_, var, error_msg, node_);
       }
 
-      policy_node& get_policy()
+      policy_type& get_policy()
       {
         return policy_;
       }
 
     private:
       type         value_;
-      policy_node  policy_;
       lookup_type& lookup_;
+      policy_node  node_;
+      policy_type  policy_;
   };
 
   template <class T> auto& make_global(engine& e, const std::string& module_name, const std::string& name, T&& value)

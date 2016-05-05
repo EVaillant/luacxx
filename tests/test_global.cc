@@ -13,8 +13,26 @@ BOOST_AUTO_TEST_CASE( global_01 )
   luacxx::engine engine;
   luacxx::make_global(engine, "truc", 5);
   luacxx::make_global(engine, "some.thing", "truc", 10);
-  engine.bind();
+  BOOST_CHECK(engine.bind());
+
   std::pair<bool, std::string> ret = engine.do_file(LUACXX_TESTS_DIR "global_01.lua");
+  if(!ret.first)
+  {
+    BOOST_FAIL(ret.second);
+  }
+}
+
+BOOST_AUTO_TEST_CASE( global_02 )
+{
+  std::vector<int>           vec = {5, 9, 15};
+  std::map<int, std::string> map = {{9, "yhyh"}, {20, "uyztgui"}};
+
+  luacxx::engine engine;
+  luacxx::make_global(engine, "vec", vec);
+  luacxx::make_global(engine, "map", map);
+  BOOST_CHECK(engine.bind());
+
+  std::pair<bool, std::string> ret = engine.do_file(LUACXX_TESTS_DIR "global_02.lua");
   if(!ret.first)
   {
     BOOST_FAIL(ret.second);

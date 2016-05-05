@@ -535,7 +535,7 @@ namespace luacxx
           type &tmp = var.as<type>();
           std::insert_iterator<type> inserter(tmp, std::begin(tmp));
           lua_pushnil(state);
-          const policy_node& data_policy = policy.get_sub_node(node_container_unary);
+          const policy_node& data_policy = policy.get_or_default_sub_node(node_container_unary);
           while (lua_next(state, idx) && error_msg.empty())
           {
             variable_type elt;
@@ -559,7 +559,7 @@ namespace luacxx
         lua_newtable(state);
         if(!check_arg_call<type>(error_msg, var))
         {
-          const policy_node& data_policy = policy.get_sub_node(node_container_unary);
+          const policy_node& data_policy = policy.get_or_default_sub_node(node_container_unary);
           for(value_type elt : cast_arg_call<type>(var))
           {
             lua_pushinteger(state, index++);
@@ -598,8 +598,8 @@ namespace luacxx
           var       = type();
           type &tmp = var.as<type>();
           std::insert_iterator<type> inserter(tmp, std::begin(tmp));
-          const policy_node& key_policy   = policy.get_sub_node(node_container_binary_key);
-          const policy_node& value_policy = policy.get_sub_node(node_container_binary_value);
+          const policy_node& key_policy   = policy.get_or_default_sub_node(node_container_binary_key);
+          const policy_node& value_policy = policy.get_or_default_sub_node(node_container_binary_value);
           lua_pushnil(state);
           while (lua_next(state, idx) && error_msg.empty())
           {
@@ -630,8 +630,8 @@ namespace luacxx
         lua_newtable(state);
         if(!check_arg_call<type>(error_msg, var))
         {
-          const policy_node& key_policy   = policy.get_sub_node(node_container_binary_key);
-          const policy_node& value_policy = policy.get_sub_node(node_container_binary_value);
+          const policy_node& key_policy   = policy.get_or_default_sub_node(node_container_binary_key);
+          const policy_node& value_policy = policy.get_or_default_sub_node(node_container_binary_value);
           for(auto& elt : cast_arg_call<type>(var))
           {
             variable_type first(std::cref(elt.first));
