@@ -199,8 +199,6 @@ namespace
       Container<int>    input_data = {1, 2, 4};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
-
       BOOST_CHECK(luacxx::convert_to<Container<int>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'1',i'1')(i'2',i'2')(i'3',i'4')'", lua_stack_dump(state));
@@ -214,8 +212,6 @@ namespace
 
       Container<double>    input_data = {1.5, 2, 4.9};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
 
       BOOST_CHECK(luacxx::convert_to<Container<double>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -231,8 +227,6 @@ namespace
       Container<bool>    input_data = {false, true};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
-
       BOOST_CHECK(luacxx::convert_to<Container<bool>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'1',b'false')(i'2',b'true')'", lua_stack_dump(state));
@@ -247,8 +241,6 @@ namespace
       Container<std::string>    input_data = {"grgr", "poiu", "rr"};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
-
       BOOST_CHECK(luacxx::convert_to<Container<std::string>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", lua_stack_dump(state));
@@ -262,8 +254,6 @@ namespace
 
       Container<const char*>    input_data = {"grgr", "poiu", "rr"};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
 
       BOOST_CHECK(luacxx::convert_to<Container<const char*>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -314,8 +304,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
-
       BOOST_CHECK(luacxx::convert_from<Container<int>>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(any.is<Container<int>>());
@@ -338,8 +326,6 @@ namespace
         lua_pushnumber(state, v);
         lua_settable(state, -3);
       }
-
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
 
       BOOST_CHECK(luacxx::convert_from<Container<double>>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -364,8 +350,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
-
       BOOST_CHECK(luacxx::convert_from<Container<bool>>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(any.is<Container<bool>>());
@@ -388,8 +372,6 @@ namespace
         lua_pushstring(state, v.c_str());
         lua_settable(state, -3);
       }
-
-      policy.get_or_create_sub_node(luacxx::node_container_unary);
 
       BOOST_CHECK(luacxx::convert_from<Container<std::string>>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -436,9 +418,6 @@ namespace
       container_type    input_data = {{1, "aaa"}, {5, "888"}, {45, "uiyui"}};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", lua_stack_dump(state));
@@ -454,9 +433,6 @@ namespace
 
       container_type    input_data = {{1.5, "aaa"}, {5.8, "888"}, {45.9, "uiyui"}};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -474,9 +450,6 @@ namespace
       container_type    input_data = {{true, "aaa"}, {false, "888"}};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(b'false',s'888')(b'true',s'aaa')'", lua_stack_dump(state));
@@ -492,9 +465,6 @@ namespace
 
       container_type    input_data = {{"1", "aaa"}, {"5", "888"}, {"45", "uiyui"}};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -512,9 +482,6 @@ namespace
       container_type    input_data = {{"1", "aaa"}, {"5", "888"}, {"45", "uiyui"}};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", lua_stack_dump(state));
@@ -530,9 +497,6 @@ namespace
 
       container_type    input_data = {{1, "aaa"}, {5, "888"}, {45, "uiyui"}};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -550,9 +514,6 @@ namespace
       container_type    input_data = {{1, true}, {5, false}, {45, true}};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'5',b'false')(i'45',b'true')'", lua_stack_dump(state));
@@ -569,9 +530,6 @@ namespace
       container_type    input_data = {{1, 9}, {5, 888}, {45, 66}};
       any = input_data;
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_CHECK_EQUAL("t'(i'45',i'66')(i'5',i'888')(i'1',i'9')'", lua_stack_dump(state));
@@ -587,9 +545,6 @@ namespace
 
       container_type    input_data = {{1, 5.9}, {5, 7.9}, {45, 8.5}};
       any = input_data;
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -631,9 +586,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(!any.empty());
@@ -658,9 +610,6 @@ namespace
         lua_pushstring(state,  v.second.c_str());
         lua_settable(state, -3);
       }
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -688,9 +637,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(!any.empty());
@@ -715,9 +661,6 @@ namespace
         lua_pushstring(state, v.second.c_str());
         lua_settable(state, -3);
       }
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
@@ -744,9 +687,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(!any.empty());
@@ -772,9 +712,6 @@ namespace
         lua_settable(state, -3);
       }
 
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
-
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
       BOOST_REQUIRE(!any.empty());
@@ -799,9 +736,6 @@ namespace
         lua_pushnumber(state,  v.second);
         lua_settable(state, -3);
       }
-
-      policy.get_or_create_sub_node(luacxx::node_container_binary_key);
-      policy.get_or_create_sub_node(luacxx::node_container_binary_value);
 
       BOOST_CHECK(luacxx::convert_from<container_type>(state, lookup, 1, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());

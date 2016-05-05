@@ -123,14 +123,13 @@ namespace luacxx
   class policy_node
   {
     public:
-      const policy_node& get_sub_node(const std::string& name) const
+      const parameter_policy& get_parameter() const
       {
-        sub_node_type::const_iterator it = nodes_.find(name);
-        assert(it != nodes_.end());
-        return *it->second;
+        assert(parameter_);
+        return *parameter_;
       }
 
-      const parameter_policy& get_parameter() const
+      parameter_policy& get_parameter()
       {
         assert(parameter_);
         return *parameter_;
@@ -139,6 +138,29 @@ namespace luacxx
       bool has_parameter() const
       {
         return parameter_ != nullptr;
+      }
+
+      template <class T> parameter_policy& get_or_create_parameter()
+      {
+        if(!parameter_)
+        {
+          parameter_ = make_parameter_policy<T>();
+        }
+        return *parameter_;
+      }
+
+      const policy_node& get_sub_node(const std::string& name) const
+      {
+        sub_node_type::const_iterator it = nodes_.find(name);
+        assert(it != nodes_.end());
+        return *it->second;
+      }
+
+      const policy_node& get_or_default_sub_node(const std::string& name) const
+      {
+        static policy_node default_node;
+        sub_node_type::const_iterator it = nodes_.find(name);
+        return (it != nodes_.end() ? *it->second : default_node);
       }
 
       bool has_node(const std::string& name) const
@@ -156,15 +178,6 @@ namespace luacxx
         return *it->second;
       }
 
-      template <class T> parameter_policy& get_or_create_parameter()
-      {
-        if(!parameter_)
-        {
-          parameter_ = make_parameter_policy<T>();
-        }
-        return *parameter_;
-      }
-
     private:
       typedef std::unordered_map<std::string, std::unique_ptr<policy_node>> sub_node_type;
 
@@ -175,14 +188,21 @@ namespace luacxx
   /**
    * @brief the arg_policy class
    */
-  template <class O> class arg_policy
+  template <class O = void> class arg_policy
   {
     public:
-      typedef O                      owner_type;
+      typedef std::conditional_t<std::is_same<O, void>::value, arg_policy, O>  owner_type;
       typedef arg_policy<owner_type> self_type;
 
       arg_policy(owner_type& owner, policy_node& node)
         : owner_(owner)
+        , node_(node)
+        , policy_(node_.get_or_create_parameter<void*>())
+      {
+      }
+
+      arg_policy(policy_node& node)
+        : owner_(*this)
         , node_(node)
         , policy_(node_.get_or_create_parameter<void*>())
       {
@@ -237,18 +257,23 @@ namespace luacxx
       parameter_policy& policy_;
   };
 
-  template <class O, class Arg> arg_policy<O> make_arg_policy(O& owner, policy_node& node, std::size_t i)
+  template <class O, class Arg> arg_policy<O> make_arg_policy(O& owner, policy_node& node)
   {
-    policy_node& sub_node = node.get_or_create_sub_node(std::to_string(i));
-    sub_node.get_or_create_parameter<Arg>();
-    return arg_policy<O>(owner, sub_node);
+    node.get_or_create_parameter<Arg>();
+    return arg_policy<O>(owner, node);
+  }
+
+  template <class Arg> arg_policy<> make_arg_policy(policy_node& node)
+  {
+    node.get_or_create_parameter<Arg>();
+    return arg_policy<>(node);
   }
 
   namespace detail
   {
     template <class O, class Tuple, std::size_t ... I> std::array<arg_policy<O>, sizeof...(I)> make_arg_policies_(O& owner, policy_node& node, std::index_sequence<I...>)
     {
-      return { make_arg_policy<O, typename std::tuple_element<I, Tuple>::type>(owner, node, I)... };
+      return { make_arg_policy<O, typename std::tuple_element<I, Tuple>::type>(owner, node.get_or_create_sub_node(std::to_string(I)))... };
     }
   }
 
