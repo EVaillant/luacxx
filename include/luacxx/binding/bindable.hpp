@@ -21,7 +21,7 @@ namespace luacxx
       bindable& operator=(const bindable&) = delete;
       bindable& operator=(bindable&&) = delete;
 
-      virtual void bind(state_type state) = 0;
+      virtual bool bind(state_type state) = 0;
   };
 }
 
