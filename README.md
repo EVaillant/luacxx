@@ -1,6 +1,7 @@
 # Luacxx 
 
-It is c++ lua binding (c++11 / c++14)
+It is c++ lua binding (c++14)
+* only header
 * without rtti
 * without exception
 
@@ -12,9 +13,9 @@ TODO
 
 * c++ compiler with support c++11 / c++14
 * [toolsbox](https://github.com/EVaillant/toolsbox)
-* [cmake](https://cmake.org/) 3.0 or highter
-* boost / unit test (not mandatory, to run unit test)
-* [lua](http://www.lua.org/) 5.3 or highter
+* [cmake](https://cmake.org) 3.0 or highter
+* [boost](http://boost.org) unit test (not mandatory, to run unit test)
+* [lua](http://www.lua.org) 5.3 or highter
 
 ## Build (Unix)
 
