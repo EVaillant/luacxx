@@ -165,9 +165,9 @@ namespace luacxx
       }
 
     private:
-      state_type              state_;
-      global_module           module_;
+      state_type              state_;      
       lookup_type             lookup_type_;
+      global_module           module_;
       lua_lib_underlying_type flags_;
   };
 }
