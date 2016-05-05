@@ -14,7 +14,7 @@ TODO
 * c++ compiler with support c++11 / c++14
 * [toolsbox](https://github.com/EVaillant/toolsbox)
 * [cmake](https://cmake.org/) 2.6 or highter
-* boost / unit test (not mandatory, to run unit test)
+* [boost](http://boost.org) unit test (not mandatory, to run unit test)
 * [lua](http://www.lua.org/) 5.3 or highter
 
 ## Build (Unix)
