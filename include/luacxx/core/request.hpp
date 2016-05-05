@@ -18,33 +18,39 @@ namespace luacxx
       typedef std::tuple<R, ARGS...>           args_type;
       typedef std::function<R (ARGS ... args)> invoke_type;
 
-      request_from_lua(state_type state, const lookup_type& registry, const policy_node& policy, std::size_t idx)
-        : state_(state)
-        , registry_(registry)
+      request_from_lua(const lookup_type& registry, const policy_node& policy, std::size_t idx)
+        : registry_(registry)
         , policy_(policy)
         , idx_(idx)
+        , nb_return_(-1)
       {
       }
 
-      std::string invoke(const invoke_type& delegate)
+      std::string invoke(state_type state, const invoke_type& delegate)
       {
-        return invoke_(delegate, std::index_sequence_for<ARGS...>{});
+        nb_return_ = 0;
+        return invoke_(state, delegate, std::index_sequence_for<ARGS...>{});
+      }
+
+      int get_nb_return_value()
+      {
+        return nb_return_;
       }
 
     protected:
-      template <std::size_t ... I> std::string invoke_(const invoke_type& delegate, std::index_sequence<I...>)
+      template <std::size_t ... I> std::string invoke_(state_type state, const invoke_type& delegate, std::index_sequence<I...>)
       {
         std::string msg;
-        auto tuple_arg = initialize_<I...>(msg);
+        auto tuple_arg = initialize_<I...>(state, msg);
         if(msg.empty())
         {
-          msg = call_<R>(delegate, tuple_arg, std::index_sequence<I...>{});
-          append_output_arg_<decltype(tuple_arg), I...>(tuple_arg, msg);
+          msg = call_<R>(state, delegate, tuple_arg, std::index_sequence<I...>{});
+          append_output_arg_<decltype(tuple_arg), I...>(state, tuple_arg, msg);
         }
         return msg;
       }
 
-      template <class Return, class ArgsAsTuple, std::size_t ... I> typename std::enable_if< std::is_same<Return, void>::value, std::string>::type call_(const invoke_type& delegate, ArgsAsTuple& args, std::index_sequence<I...>)
+      template <class Return, class ArgsAsTuple, std::size_t ... I> typename std::enable_if< std::is_same<Return, void>::value, std::string>::type call_(state_type, const invoke_type& delegate, ArgsAsTuple& args, std::index_sequence<I...>)
       {
         std::string msg;
         try
@@ -62,13 +68,13 @@ namespace luacxx
         return msg;
       }
 
-      template <class Return, class ArgsAsTuple, std::size_t ... I> typename std::enable_if<!std::is_same<Return, void>::value, std::string>::type call_(const invoke_type& delegate, ArgsAsTuple& args, std::index_sequence<I...>)
+      template <class Return, class ArgsAsTuple, std::size_t ... I> typename std::enable_if<!std::is_same<Return, void>::value, std::string>::type call_(state_type state, const invoke_type& delegate, ArgsAsTuple& args, std::index_sequence<I...>)
       {
         std::string msg;
         try
         {
           toolsbox::any ret = delegate(cast_arg_call<typename std::tuple_element<I+1, args_type>::type>(std::get<I>(args))...);
-          append_output_<0>(ret, msg);
+          append_output_<0>(state, ret, msg);
         }
         catch(const std::exception& e)
         {
@@ -81,14 +87,14 @@ namespace luacxx
         return msg;
       }
 
-      template <size_t I0, size_t ...I> auto initialize_(std::string& msg, typename std::enable_if<(sizeof...(I) != 0), int>::type = 0)
+      template <size_t I0, size_t ...I> auto initialize_(state_type state, std::string& msg, typename std::enable_if<(sizeof...(I) != 0), int>::type = 0)
       {
-        auto left  = initialize_<I0>(msg);
-        auto right = initialize_<I...>(msg);
+        auto left  = initialize_<I0>(state, msg);
+        auto right = initialize_<I...>(state, msg);
         return std::tuple_cat(std::move(left), std::move(right));
       }
 
-      template <std::size_t I> auto initialize_(std::string& msg)
+      template <std::size_t I> auto initialize_(state_type state, std::string& msg)
       {
         toolsbox::any ret;
         if(msg.empty())
@@ -99,7 +105,7 @@ namespace luacxx
           const parameter_policy& parameter = policy.get_parameter();
           if(parameter.is_input())
           {
-            if(lua_isnone(state_, idx_))
+            if(lua_isnone(state, idx_))
             {
               if(parameter.has_default_value())
               {
@@ -112,7 +118,7 @@ namespace luacxx
             }
             else
             {
-              convert_from<arg_type>(state_, registry_, idx_, ret, msg, policy);
+              convert_from<arg_type>(state, registry_, idx_, ret, msg, policy);
               if(msg.empty())
               {
                 check_arg_call<arg_type>(msg, ret);
@@ -131,27 +137,27 @@ namespace luacxx
         return std::make_tuple(ret);
       }
 
-      template <class T = void> auto initialize_(std::string&)
+      template <class T = void> auto initialize_(state_type, std::string&)
       {
         return std::make_tuple();
       }
 
-      template <class ArgsAsTuple, size_t I0, size_t ...I> void append_output_arg_(ArgsAsTuple& args, std::string& msg, typename std::enable_if<(sizeof...(I) != 0), int>::type = 0)
+      template <class ArgsAsTuple, size_t I0, size_t ...I> void append_output_arg_(state_type state, ArgsAsTuple& args, std::string& msg, typename std::enable_if<(sizeof...(I) != 0), int>::type = 0)
       {
-        append_output_arg_<ArgsAsTuple, I0>(args, msg);
-        append_output_arg_<ArgsAsTuple, I...>(args, msg);
+        append_output_arg_<ArgsAsTuple, I0>(state, args, msg);
+        append_output_arg_<ArgsAsTuple, I...>(state, args, msg);
       }
 
-      template <class ArgsAsTuple, size_t I> void append_output_arg_(ArgsAsTuple& args, std::string& msg)
+      template <class ArgsAsTuple, size_t I> void append_output_arg_(state_type state, ArgsAsTuple& args, std::string& msg)
       {
-        append_output_<I+1>(std::get<I>(args), msg);
+        append_output_<I+1>(state, std::get<I>(args), msg);
       }
 
-      template <class ArgsAsTuple, class T = void> void append_output_arg_(ArgsAsTuple&, std::string&)
+      template <class ArgsAsTuple, class T = void> void append_output_arg_(state_type, ArgsAsTuple&, std::string&)
       {
       }
 
-      template <std::size_t I> void append_output_(toolsbox::any& value, std::string& msg)
+      template <std::size_t I> void append_output_(state_type state, toolsbox::any& value, std::string& msg)
       {
         if(msg.empty())
         {
@@ -162,20 +168,24 @@ namespace luacxx
 
           if((parameter.is_output() && I > 0) || (!parameter.has_return() && I == 0))
           {            
-            convert_to<arg_type>(state_, registry_, value, msg, policy);
+            convert_to<arg_type>(state, registry_, value, msg, policy);
             if(!msg.empty())
             {
               msg += " (" + std::to_string(I) + ")";
+            }
+            else
+            {
+              ++nb_return_;
             }
           }
         }
       }
 
     private:
-      state_type         state_;
       const lookup_type& registry_;
       const policy_node& policy_;
       std::size_t        idx_;
+      int                nb_return_;
   };
 }
 

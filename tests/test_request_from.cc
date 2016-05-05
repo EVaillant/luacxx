@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     lua_pushinteger(state, 5);
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int i)
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int i)
     {
       status = (i == 5);
     });
@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     lua_pushinteger(state, 6);
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int i, int j)
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int i, int j)
     {
       status = (i == 5) && (j == 6);
     });
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     lua_pushstring(state,  "azdft");
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](bool b, int i, double d, const std::string& s, const char* cstr)
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](bool b, int i, double d, const std::string& s, const char* cstr)
     {
       status = b && (i == 5) && (d == 3.5) && (s == "azedf") && (std::string(cstr) == "azdft");
     });
@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
 
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int &i)
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int &i)
     {
       status = true;
       i      = 5;
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
 
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int &i, std::string&s)
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int &i, std::string&s)
     {
       status = true;
       i      = 5;
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
 
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int &i, std::string&s) -> bool
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int &i, std::string&s) -> bool
     {
       status = true;
       i      = 5;
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
 
 
     bool status = false;
-    request_from        request(state, lookup, policy, 1);
-    std::string         ret = request.invoke([&status](int &i, std::string&s) -> bool
+    request_from        request(lookup, policy, 1);
+    std::string         ret = request.invoke(state, [&status](int &i, std::string&s) -> bool
     {
       status = true;
       i      = 5;
@@ -247,8 +247,8 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
 
     {
       bool status = false;
-      request_from        request(state, lookup, policy, 1);
-      std::string         ret = request.invoke([&status](int i, const std::string&s)
+      request_from        request(lookup, policy, 1);
+      std::string         ret = request.invoke(state, [&status](int i, const std::string&s)
       {
         status = (i == 9) && (s == "truc");
       });
@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
       lua_pushinteger(state, 5);
 
       bool status = false;
-      request_from        request(state, lookup, policy, 1);
-      std::string         ret = request.invoke([&status](int i, const std::string&s)
+      request_from        request(lookup, policy, 1);
+      std::string         ret = request.invoke(state, [&status](int i, const std::string&s)
       {
         status = (i == 5) && (s == "truc");
       });
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
       lua_pushstring(state, "blabla");
 
       bool status = false;
-      request_from        request(state, lookup, policy, 1);
-      std::string         ret = request.invoke([&status](int i, const std::string&s)
+      request_from        request(lookup, policy, 1);
+      std::string         ret = request.invoke(state, [&status](int i, const std::string&s)
       {
         status = (i == 5) && (s == "blabla");
       });
