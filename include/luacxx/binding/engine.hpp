@@ -50,18 +50,35 @@ namespace luacxx
         return module_.get_module(name);
       }
 
+      inline std::vector<std::string> need_to_bind()
+      {
+        return module_.need_to_bind();
+      }
+
       inline lookup_type& get_lookup_type()
       {
         return lookup_type_;
       }
 
-      inline void bind()
+      inline bool bind()
       {
-        assert(!state_);
-        state_ = luaL_newstate();
-        fill_lookup_type_();
-        open_lib_();
-        module_.bind(state_);
+        if(!state_)
+        {
+          state_ = luaL_newstate();
+
+          fill_lookup_type_();
+          open_lib_();
+        }
+        bool status = true;
+        std::vector<std::string> before_binding = need_to_bind();
+        while(status && !before_binding.empty())
+        {
+          module_.bind(state_);
+          std::vector<std::string> after_binding = need_to_bind();
+          status = (after_binding != before_binding);
+          before_binding = std::move(after_binding);
+        }
+        return status;
       }
 
       inline std::pair<bool, std::string> do_file(const std::string& name)

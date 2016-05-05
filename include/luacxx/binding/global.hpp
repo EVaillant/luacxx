@@ -4,9 +4,8 @@
 # include <luacxx/binding/engine.hpp>
 # include <luacxx/binding/bindable.hpp>
 
+# include <luacxx/core/policy.hpp>
 # include <luacxx/core/utility.hpp>
-
-# include <iostream>
 
 namespace luacxx
 {
@@ -21,12 +20,11 @@ namespace luacxx
       {
       }
 
-      virtual void bind(state_type state) override
+      virtual bool bind(state_type state) override
       {
         toolsbox::any var = std::ref(value_);
         std::string   error_msg;
-        bool status = convert_to<type&>(state, lookup_, var, error_msg, policy_);
-        assert(status);
+        return convert_to<type&>(state, lookup_, var, error_msg, policy_);
       }
 
       policy_node& get_policy()
