@@ -1,60 +1,57 @@
 #ifndef LUACXX_CORE_DEFAULT_INITIALIZER_HPP
 # define LUACXX_CORE_DEFAULT_INITIALIZER_HPP
 
+# include <luacxx/core/lookup_type.hpp>
+# include <luacxx/core/type_traits.hpp>
 # include <memory>
 
 namespace luacxx
 {
-  template <class T> struct default_initializer
+  template <class T, class D = std::decay_t<T>> struct default_initializer
   {
-    typedef std::decay_t<T>       type;
-    typedef std::shared_ptr<type> shared_type;
+    typedef typename register_type<T>::type type;
+    typedef std::shared_ptr<type>           shared_type;
+    typedef toolsbox::any                   return_type;
 
-    static type create()
+    static return_type create(const lookup_type& lookup)
     {
-      return type();
+      return_type ret;
+      const type_info<type>& info = lookup.template get<type>();
+      if(info.valid())
+      {
+        switch(info.get_underlying_type())
+        {
+          case common_type_info::underlying_type::Class:
+            ret = std::make_shared<type>();
+            break;
+
+          default:
+            ret = type();
+            break;
+
+        };
+      }
+      return ret;
     }
 
-    static type empty()
-    {
-      return type();
-    }
-
-    static shared_type shared()
+    static return_type shared()
     {
       return std::make_shared<type>();
     }
   };
 
-  template <class T> struct default_initializer<std::shared_ptr<T>>
+  template <class T, class U> struct default_initializer<T, std::shared_ptr<U>>
   {
-    typedef std::decay_t<T>       type;
-    typedef std::shared_ptr<type> shared_type;
+    typedef toolsbox::any return_type;
 
-    static shared_type create()
+    static return_type create(const lookup_type&)
     {
-      return default_initializer<type>::shared();
+      return default_initializer<U>::shared();
     }
 
-    static shared_type empty()
+    static return_type shared()
     {
-      return shared_type();
-    }
-  };
-
-  template <class T> struct default_initializer<T*>
-  {
-    typedef std::decay_t<T>       type;
-    typedef std::shared_ptr<type> shared_type;
-
-    static auto create()
-    {
-      return default_initializer<type>::create();
-    }
-
-    static auto empty()
-    {
-      return default_initializer<type>::empty();
+      return std::make_shared<std::shared_ptr<U>>();
     }
   };
 }
