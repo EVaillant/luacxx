@@ -12,7 +12,7 @@ namespace luacxx
   template <class R, class ... ARGS> class function_wrapper : public callable
   {
     public:
-      typedef std::function<R (ARGS...)>            functor_type;
+      typedef std::function<R (ARGS...)>           functor_type;
       typedef policy<function_wrapper, R, ARGS...> policy_type;
 
       function_wrapper(lookup_type& lookup, const functor_type& functor)

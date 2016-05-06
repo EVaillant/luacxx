@@ -106,7 +106,7 @@ namespace luacxx
 
           virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const override
           {
-            if(check_arg_call<enum_type>(error_msg, var))
+            if(!check_arg_call<enum_type>(error_msg, var))
             {
               enum_type           e = cast_arg_call<enum_type>(var);
               variable_type udl_var =  enum_to_underlying::convert(e);
@@ -115,9 +115,9 @@ namespace luacxx
           }
 
           virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node& policy) const override
-          {
+          {            
             variable_type udl_var;
-            if(convert_from<underlying_type>(state, owner_.lookup_, idx, udl_var, error_msg, policy) && check_arg_call<underlying_type>(error_msg, udl_var))
+            if(convert_from<underlying_type>(state, owner_.lookup_, idx, udl_var, error_msg, policy) && !check_arg_call<underlying_type>(error_msg, udl_var))
             {
               underlying_type udl = cast_arg_call<underlying_type>(udl_var);
               typename reverse_values::const_iterator it = owner_.reverse_values_.find(udl);
