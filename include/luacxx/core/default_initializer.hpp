@@ -41,6 +41,22 @@ namespace luacxx
       return shared_type();
     }
   };
+
+  template <class T> struct default_initializer<T*>
+  {
+    typedef std::decay_t<T>       type;
+    typedef std::shared_ptr<type> shared_type;
+
+    static auto create()
+    {
+      return default_initializer<type>::create();
+    }
+
+    static auto empty()
+    {
+      return default_initializer<type>::empty();
+    }
+  };
 }
 
 #endif
