@@ -8,6 +8,8 @@
 #include <luacxx/core/basic_type_info.hpp>
 #include <luacxx/core/policy.hpp>
 
+#include <luacxx/helper/stack.hpp>
+
 #include "helper.hpp"
 
 BOOST_AUTO_TEST_CASE( request_from_01 )
@@ -38,7 +40,7 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
     BOOST_CHECK(status);
   }
 
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
     BOOST_CHECK(status);
   }
 
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE( request_from_01 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
     BOOST_CHECK(status);
   }
 }
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "i'5'");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "i'5'");
     BOOST_CHECK(status);
   }
 
@@ -158,7 +160,7 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "i'5's'ddd'");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "i'5's'ddd'");
     BOOST_CHECK(status);
   }
 
@@ -188,7 +190,7 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "b'false'i'5's'ddd'");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "b'false'i'5's'ddd'");
     BOOST_CHECK(status);
   }
 
@@ -219,7 +221,7 @@ BOOST_AUTO_TEST_CASE( request_from_02 )
     });
 
     BOOST_CHECK_EQUAL(ret, "");
-    BOOST_CHECK_EQUAL(lua_stack_dump(state), "i'5's'ddd'");
+    BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "i'5's'ddd'");
     BOOST_CHECK(status);
   }
 }
@@ -254,7 +256,7 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
       });
 
       BOOST_CHECK_EQUAL(ret, "");
-      BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+      BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
       BOOST_CHECK(status);
     }
 
@@ -269,7 +271,7 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
       });
 
       BOOST_CHECK_EQUAL(ret, "");
-      BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+      BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
       BOOST_CHECK(status);
     }
 
@@ -285,7 +287,7 @@ BOOST_AUTO_TEST_CASE( request_from_03 )
       });
 
       BOOST_CHECK_EQUAL(ret, "");
-      BOOST_CHECK_EQUAL(lua_stack_dump(state), "");
+      BOOST_CHECK_EQUAL(luacxx::dump_stack(state), "");
       BOOST_CHECK(status);
     }
   }
