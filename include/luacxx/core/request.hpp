@@ -18,8 +18,8 @@ namespace luacxx
       typedef std::tuple<R, ARGS...>           args_type;
       typedef std::function<R (ARGS ... args)> invoke_type;
 
-      request_from_lua(const lookup_type& registry, const policy_node& policy, std::size_t idx)
-        : registry_(registry)
+      request_from_lua(const lookup_type& lookup, const policy_node& policy, std::size_t idx)
+        : lookup_(lookup)
         , policy_(policy)
         , idx_(idx)
         , nb_return_(-1)
@@ -118,7 +118,7 @@ namespace luacxx
             }
             else
             {
-              convert_from<arg_type>(state, registry_, idx_, ret, msg, policy);
+              convert_from<arg_type>(state, lookup_, idx_, ret, msg, policy);
               if(msg.empty())
               {
                 check_arg_call<arg_type>(msg, ret);
@@ -131,7 +131,7 @@ namespace luacxx
           }
           else
           {
-            ret = default_initializer<arg_type>::empty();
+            ret = default_initializer<arg_type>::create(lookup_);
           }
         }
         return std::make_tuple(ret);
@@ -168,7 +168,7 @@ namespace luacxx
 
           if((parameter.is_output() && I > 0) || (!parameter.has_return() && I == 0))
           {            
-            convert_to<arg_type>(state, registry_, value, msg, policy);
+            convert_to<arg_type>(state, lookup_, value, msg, policy);
             if(!msg.empty())
             {
               msg += " (" + std::to_string(I) + ")";
@@ -182,7 +182,7 @@ namespace luacxx
       }
 
     private:
-      const lookup_type& registry_;
+      const lookup_type& lookup_;
       const policy_node& policy_;
       std::size_t        idx_;
       int                nb_return_;

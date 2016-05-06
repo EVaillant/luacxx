@@ -480,8 +480,8 @@ namespace luacxx
   }
 
   // fwd declaration
-  template <class T> bool convert_from(state_type state, const lookup_type& registry, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy);
-  template <class T> bool convert_to(state_type state, const lookup_type& registry, toolsbox::any& var, std::string& error_msg, const policy_node& policy);
+  template <class T> bool convert_from(state_type state, const lookup_type& lookup, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy);
+  template <class T> bool convert_to(state_type state, const lookup_type& lookup, toolsbox::any& var, std::string& error_msg, const policy_node& policy);
 
   namespace detail
   {
@@ -492,9 +492,9 @@ namespace luacxx
       typedef T             type;
       typedef toolsbox::any variable_type;
 
-      static void from(state_type state, const lookup_type& registry, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
+      static void from(state_type state, const lookup_type& lookup, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
       {
-        const type_info<type>& type_info = registry.template get<type>();
+        const type_info<type>& type_info = lookup.template get<type>();
         if(type_info.valid())
         {
           type_info.from_lua(state, idx, var, error_msg, policy);
@@ -505,9 +505,9 @@ namespace luacxx
         }
       }
 
-      static void to(state_type state, const lookup_type& registry, variable_type& var, std::string& error_msg, const policy_node& policy)
+      static void to(state_type state, const lookup_type& lookup, variable_type& var, std::string& error_msg, const policy_node& policy)
       {
-        const type_info<type>& type_info = registry.template get<type>();
+        const type_info<type>& type_info = lookup.template get<type>();
         if(type_info.valid())
         {
           type_info.to_lua(state, var, error_msg, policy);
@@ -527,7 +527,7 @@ namespace luacxx
       typedef I             value_type;
       typedef toolsbox::any variable_type;
 
-      static void from(state_type state, const lookup_type& registry, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
+      static void from(state_type state, const lookup_type& lookup, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
       {
         if(lua_istable(state, idx))
         {
@@ -539,7 +539,7 @@ namespace luacxx
           while (lua_next(state, idx) && error_msg.empty())
           {
             variable_type elt;
-            convert_from<value_type>(state, registry, lua_gettop(state), elt, error_msg, data_policy);
+            convert_from<value_type>(state, lookup, lua_gettop(state), elt, error_msg, data_policy);
             if(error_msg.empty() && !check_arg_call<value_type>(error_msg, elt))
             {
               inserter = cast_arg_call<value_type>(elt);
@@ -553,7 +553,7 @@ namespace luacxx
         }
       }
 
-      static void to(state_type state, const lookup_type& registry, variable_type& var, std::string& error_msg, const policy_node& policy)
+      static void to(state_type state, const lookup_type& lookup, variable_type& var, std::string& error_msg, const policy_node& policy)
       {
         std::size_t index = 1;
         lua_newtable(state);
@@ -564,7 +564,7 @@ namespace luacxx
           {
             lua_pushinteger(state, index++);
             variable_type elt_any  = std::ref(elt);
-            convert_to<value_type>(state, registry, elt_any, error_msg, data_policy);
+            convert_to<value_type>(state, lookup, elt_any, error_msg, data_policy);
             if(error_msg.empty())
             {
               lua_settable(state, -3);
@@ -591,7 +591,7 @@ namespace luacxx
       typedef V             value_type;
       typedef toolsbox::any variable_type;
 
-      static void from(state_type state, const lookup_type& registry, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
+      static void from(state_type state, const lookup_type& lookup, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
       {
         if(lua_istable(state, idx))
         {
@@ -606,10 +606,10 @@ namespace luacxx
             variable_type key;
             variable_type value;
 
-            if(convert_from<value_type>(state, registry, lua_gettop(state), value, error_msg, value_policy))
+            if(convert_from<value_type>(state, lookup, lua_gettop(state), value, error_msg, value_policy))
             {
               lua_pushvalue(state, lua_gettop(state));
-              convert_from<key_type>(state, registry, lua_gettop(state), key, error_msg, key_policy);
+              convert_from<key_type>(state, lookup, lua_gettop(state), key, error_msg, key_policy);
             }
 
             if(error_msg.empty() && !check_arg_call<key_type>(error_msg, key) && !check_arg_call<value_type>(error_msg, value))
@@ -625,7 +625,7 @@ namespace luacxx
         }
       }
 
-      static void to(state_type state, const lookup_type& registry, variable_type& var, std::string& error_msg, const policy_node& policy)
+      static void to(state_type state, const lookup_type& lookup, variable_type& var, std::string& error_msg, const policy_node& policy)
       {
         lua_newtable(state);
         if(!check_arg_call<type>(error_msg, var))
@@ -636,8 +636,8 @@ namespace luacxx
           {
             variable_type first(std::cref(elt.first));
             variable_type second(std::ref(elt.second));
-            if(convert_to<key_type>  (state, registry, first,  error_msg, key_policy)
-              && convert_to<value_type>(state, registry, second, error_msg, value_policy))
+            if(convert_to<key_type>  (state, lookup, first,  error_msg, key_policy)
+              && convert_to<value_type>(state, lookup, second, error_msg, value_policy))
             {
               lua_settable(state, -3);
             }
@@ -655,17 +655,17 @@ namespace luacxx
 
   //
   // convert_from & convert_to
-  template <class T> bool convert_from(state_type state, const lookup_type& registry, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy)
+  template <class T> bool convert_from(state_type state, const lookup_type& lookup, std::size_t idx, toolsbox::any &var, std::string& error_msg, const policy_node& policy)
   {
     typedef typename register_type<T>::type  register_type;
-    detail::convert<register_type>::from(state, registry, idx, var, error_msg, policy);
+    detail::convert<register_type>::from(state, lookup, idx, var, error_msg, policy);
     return error_msg.empty();
   }
 
-  template <class T> bool convert_to(state_type state, const lookup_type& registry, toolsbox::any& var, std::string& error_msg, const policy_node& policy)
+  template <class T> bool convert_to(state_type state, const lookup_type& lookup, toolsbox::any& var, std::string& error_msg, const policy_node& policy)
   {
     typedef typename register_type<T>::type  register_type;
-    detail::convert<register_type>::to(state, registry, var, error_msg, policy);
+    detail::convert<register_type>::to(state, lookup, var, error_msg, policy);
     return error_msg.empty();
   }
 }
