@@ -14,6 +14,8 @@ namespace luacxx
   constexpr auto msg_error_invalid_container     = "invalid container";
   constexpr auto msg_error_invalid_tranformation = "invalid transformation";
   constexpr auto msg_error_invalid_enum_value    = "invalid enum value";
+  constexpr auto msg_error_invalid_object        = "invalid object";
+  constexpr auto msg_error_invalid_cast_object   = "invalid cast object";
 
   //
   // field

@@ -8,6 +8,8 @@
 # include <luacxx/core/policy.hpp>
 # include <luacxx/core/utility.hpp>
 
+# include <lua.hpp>
+
 # include <type_traits>
 
 namespace luacxx
@@ -47,9 +49,8 @@ namespace luacxx
       typedef U            underlying_type;
       typedef C            enum_to_underlying;
 
-      enum_wrapper(lookup_type& lookup, const std::string& name)
+      enum_wrapper(lookup_type& lookup)
         : lookup_(lookup)
-        , enum_name_(name)
       {
         lookup_.set<enum_type>(std::make_shared<enum_type_info>(*this));
       }
@@ -61,7 +62,7 @@ namespace luacxx
 
       virtual bool bind(state_type state) override
       {
-        luaL_newmetatable(state, enum_name_.c_str());
+        lua_newtable(state);
         bool ret = true;
         for(auto & pair : values_)
         {
@@ -138,7 +139,6 @@ namespace luacxx
 
     private:
       lookup_type&      lookup_;
-      const std::string enum_name_;
       values            values_;
       reverse_values    reverse_values_;
   };
@@ -146,7 +146,7 @@ namespace luacxx
   template <class E, class U = std::underlying_type_t<E>, class C = detail::enum_to_underlying<E,U>> auto& make_enum(engine& e, const std::string& module_name, const std::string& name)
   {
     typedef enum_wrapper<E, U, C> wrapper_type;
-    std::unique_ptr<wrapper_type> wrapper = std::make_unique<wrapper_type>(e.get_lookup_type(), name);
+    std::unique_ptr<wrapper_type> wrapper = std::make_unique<wrapper_type>(e.get_lookup_type());
     wrapper_type&                     ret = *wrapper;
     module &m = e.get_module(module_name);
     m.add(name, std::move(wrapper));
