@@ -19,8 +19,9 @@ namespace luacxx
   template <class C> class wrapper_class : public bindable
   {
     public:
-      typedef C             class_type;
-      typedef wrapper_class self_type;
+      typedef C                           class_type;
+      typedef std::shared_ptr<class_type> smart_type;
+      typedef wrapper_class               self_type;
 
       wrapper_class(lookup_type& lookup, const std::string& module_name, const std::string& name)
         : lookup_(lookup)
@@ -29,7 +30,7 @@ namespace luacxx
         , class_meta_name_(module_name_    + "|" + name_ + "|class_meta")
         , instance_meta_name_(module_name_ + "|" + name_ + "|instance_meta")
       {
-        dtor_();
+        default_mth_();
       }
 
       ~wrapper_class()
@@ -61,7 +62,11 @@ namespace luacxx
         // attach table with meta table
         lua_setmetatable(state,  -2);
 
+        //
+        // add to lookup
+        assert(!lookup_.exist<class_type>());
         lookup_.set<class_type>(std::make_shared<class_type_info>(*this));
+
         return true;
       }
 
@@ -73,27 +78,26 @@ namespace luacxx
 
       template <class ... ARGS> auto& ctor(const default_policy& = default_policy())
       {
-        auto& policy = this->ctor<ARGS...>(custum_policy());
-        return policy.get_owner();
+        this->ctor<ARGS...>(custum_policy());
+        return *this;
       }
 
       template <class ... ARGS> auto& ctor(const custum_policy&)
       {
-        typedef ctor_method<class_type, ARGS...>       ctor_method_type;
-        typedef typename ctor_method_type::policy_type policy_type;
+        typedef ctor_method<self_type, class_type, ARGS...> ctor_method_type;
+        typedef typename ctor_method_type::policy_type      policy_type;
 
-        std::unique_ptr<ctor_method_type> ctor = std::make_unique<ctor_method_type>(lookup_);
+        std::unique_ptr<ctor_method_type> ctor = std::make_unique<ctor_method_type>(lookup_, *this);
         policy_type &policy = ctor->get_policy();
         instance_bindables_[detail::lua_field_call] = std::move(ctor);
         return policy;
       }
 
-    protected:
+    protected:      
       class class_type_info : public type_info<class_type>
       {
         public:
-          typedef common_type_info::variable_type variable_type;
-          typedef std::shared_ptr<class_type>     smart_type;
+          typedef common_type_info::variable_type variable_type;          
 
           class_type_info(wrapper_class& owner)
             : type_info<class_type>(common_type_info::underlying_type::Class)
@@ -110,8 +114,17 @@ namespace luacxx
             else if(!check_arg_call<class_type*>(error_msg, var))
             {
               error_msg.clear();
-              detail::class_ptr_type type = (policy.has_parameter() && policy.get_parameter().is_delegate_owner() ? detail::class_ptr_type::raw_ptr_with_delegate_owner : detail::class_ptr_type::raw_ptr);
-              to_lua_impl_<class_type*, class_type*>(state, var, type);
+              if(policy.has_parameter() && policy.get_parameter().is_delegate_owner())
+              {
+                smart_type        smart(cast_arg_call<class_type*>(var));
+                variable_type var_smart = smart;
+
+                to_lua_impl_<const smart_type, smart_type>(state, var_smart, detail::class_ptr_type::smart_ptr);
+              }
+              else
+              {
+                to_lua_impl_<class_type*, class_type*>(state, var, detail::class_ptr_type::raw_ptr);
+              }
             }
           }
 
@@ -140,7 +153,6 @@ namespace luacxx
                       var = *(smart_type*)ret.second.ptr;
                       break;
 
-                    case detail::class_ptr_type::raw_ptr_with_delegate_owner:
                     case detail::class_ptr_type::raw_ptr:
                       var = *(class_type**)ret.second.ptr;
                       break;
@@ -198,13 +210,18 @@ namespace luacxx
       {
         public:
           virtual ~wrapper_inheritance() {}
+
           virtual bool check_dependency() const = 0;
+          virtual toolsbox::type_uid::id_type get_id() const = 0;
+          virtual detail::class_cast get_class_cast() const = 0;
       };
 
       template <class I> class wrapper_inheritance_impl : public wrapper_inheritance
       {
         public:
           typedef I inheritance_class;
+          typedef typename wrapper_class<inheritance_class>::smart_type inheritance_smart_type;
+          //typedef typename wrapper_class<inheritance_class>::class_type_info inheritance_class_type_info;
 
           wrapper_inheritance_impl(wrapper_class& owner)
             : owner_(owner)
@@ -217,6 +234,40 @@ namespace luacxx
             return owner_.lookup_.template exist<inheritance_class>();
           }
 
+          virtual toolsbox::type_uid::id_type get_id() const override
+          {
+            return  get_id_();
+          }
+
+          virtual detail::class_cast get_class_cast() const override
+          {
+            return &wrapper_inheritance_impl::cast;
+          }
+
+        protected:
+          static toolsbox::type_uid::id_type get_id_()
+          {
+            return toolsbox::type_uid::get<inheritance_class>();
+          }
+
+          static detail::class_ptr cast(const detail::class_ptr& ptr)
+          {
+            detail::class_ptr sub_ptr {nullptr, ptr.type , get_id_()};
+
+            switch(ptr.type)
+            {
+              case detail::class_ptr_type::smart_ptr:
+                //sub_ptr.ptr = ()(smart_type*)ret.second.ptr;
+                break;
+
+              case detail::class_ptr_type::raw_ptr:
+                //sub_ptr.ptr = &((inheritance_class*)*(class_type**)ptr.ptr);
+                break;
+            }
+
+            return sub_ptr;
+          }
+
         private:
           wrapper_class& owner_;
       };
@@ -225,6 +276,20 @@ namespace luacxx
       typedef std::vector<inheritance_ptr_type>        inheritances_type;
       typedef std::unique_ptr<bindable>                bindable_ptr_type;
       typedef std::map<std::string, bindable_ptr_type> bindables_type;
+
+      class index : public bindable
+      {
+        public:
+          index()
+          {
+          }
+
+          virtual bool bind(state_type state) override
+          {
+            lua_pushvalue(state, -1);
+            return true;
+          }
+      };
 
       bool check_dependency() const
       {
@@ -255,11 +320,12 @@ namespace luacxx
         return true;
       }
 
-      void dtor_()
+      void default_mth_()
       {
         typedef dtor_method<class_type> dtor_method_type;
-        std::unique_ptr<dtor_method_type> dtor = std::make_unique<dtor_method_type>();
-        class_bindables_[detail::lua_field_gc] = std::move(dtor);
+
+        class_bindables_[detail::lua_field_gc]    = std::make_unique<dtor_method_type>();
+        class_bindables_[detail::lua_field_index] = std::make_unique<index>();
       }
 
     private:
