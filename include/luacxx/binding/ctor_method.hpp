@@ -8,15 +8,16 @@
 
 namespace luacxx
 {
-  template <class C, class ... ARGS> class ctor_method : public callable
+  template <class O, class C, class ... ARGS> class ctor_method : public callable
   {
     public:
-      typedef C                                         class_type;
-      typedef std::shared_ptr<class_type>               return_type;
-      typedef policy<ctor_method, return_type, ARGS...> policy_type;
+      typedef O                                        owner_type;
+      typedef C                                        class_type;
+      typedef std::shared_ptr<class_type>              return_type;
+      typedef policy<owner_type, return_type, ARGS...> policy_type;
 
-      ctor_method(lookup_type& lookup)
-        : policy_(*this, node_)
+      ctor_method(lookup_type& lookup, owner_type& owner)
+        : policy_(owner, node_)
         , request_(lookup, node_, 1)
       {
       }

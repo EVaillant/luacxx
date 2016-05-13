@@ -15,8 +15,7 @@ namespace luacxx
     enum class class_ptr_type
     {
       smart_ptr = 0,
-      raw_ptr   = 1,
-      raw_ptr_with_delegate_owner = 2
+      raw_ptr   = 1
     };
 
     struct class_ptr
@@ -68,10 +67,6 @@ namespace luacxx
 
               case 1:
                 ptr.type =  class_ptr_type::raw_ptr;
-                break;
-
-              case 2:
-                ptr.type =  class_ptr_type::raw_ptr_with_delegate_owner;
                 break;
 
               default:

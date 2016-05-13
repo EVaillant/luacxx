@@ -30,10 +30,6 @@ namespace luacxx
                 ((smart_type*) ret.second.ptr)->~smart_type();
                 break;
 
-              case detail::class_ptr_type::raw_ptr_with_delegate_owner:
-                delete *(class_type**) ret.second.ptr;
-                break;
-
               case detail::class_ptr_type::raw_ptr:
                 // nothing to do
                 break;
