@@ -2,7 +2,7 @@
 # define LUACXX_BINDING_DTOR_METHOD_HPP
 
 # include <luacxx/binding/callable.hpp>
-# include <luacxx/binding/utility.hpp>
+# include <luacxx/core/type_info.hpp>
 
 namespace luacxx
 {
@@ -12,25 +12,26 @@ namespace luacxx
       typedef C                           class_type;
       typedef std::shared_ptr<class_type> smart_type;
 
-      dtor_method()
+      dtor_method(const common_class_type_info::self_smart_type& helper)
+        : helper_(helper)
       {
       }
 
     protected:
       virtual int invoke_(state_type state) override
-      {
-        std::pair<bool, detail::class_ptr> ret = detail::get_class_ptr<class_type>(state, 1);
+      {        
+        std::pair<bool, common_class_type_info::class_field> ret = helper_->get_class_field(state, 1);
         if(ret.first && ret.second.id == toolsbox::type_uid::get<class_type>())
         {
           if(ret.second.ptr)
           {
             switch(ret.second.type)
             {
-              case detail::class_ptr_type::smart_ptr:
+              case common_class_type_info::class_ptr_type::smart_ptr:
                 ((smart_type*) ret.second.ptr)->~smart_type();
                 break;
 
-              case detail::class_ptr_type::raw_ptr:
+              case common_class_type_info::class_ptr_type::raw_ptr:
                 // nothing to do
                 break;
             }
@@ -38,10 +39,13 @@ namespace luacxx
         }
         else
         {
-          luaL_error(state, "unable to invoke destructor because private field is corrupted.");
+          luaL_error(state, msg_error_object_corrupted);
         }
         return 0;
       }
+
+    private:
+      common_class_type_info::self_smart_type helper_;
   };
 }
 

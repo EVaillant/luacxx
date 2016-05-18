@@ -18,6 +18,14 @@ namespace luacxx
         return (it == infos_.end() ? empty : *static_cast<type_info<T>*>(it->second.get()));
       }
 
+      template <class T> type_info<T>& get()
+      {
+        static empty_type_info<T> empty;
+        id_type id = toolsbox::type_uid::get<T>();
+        infos_type::const_iterator it = infos_.find(id);
+        return (it == infos_.end() ? empty : *static_cast<type_info<T>*>(it->second.get()));
+      }
+
       template <class T> void set(const std::shared_ptr<type_info<T>>& ti)
       {
         infos_[toolsbox::type_uid::get<T>()] = ti;

@@ -16,12 +16,24 @@ namespace luacxx
   constexpr auto msg_error_invalid_enum_value    = "invalid enum value";
   constexpr auto msg_error_invalid_object        = "invalid object";
   constexpr auto msg_error_invalid_cast_object   = "invalid object cast";
+  constexpr auto msg_error_object_corrupted      = "object corrupted";
 
   //
   // field
   constexpr auto node_container_unary        = "data";
   constexpr auto node_container_binary_key   = "key";
   constexpr auto node_container_binary_value = "value";
+
+  namespace detail
+  {
+    constexpr auto lua_field_call    = "__call";
+    constexpr auto lua_field_index   = "__index";
+    constexpr auto lua_field_gc      = "__gc";
+    constexpr auto lua_field_id      = "__id_private";
+    constexpr auto lua_field_ptr     = "__ptr_private";
+    constexpr auto lua_field_type    = "__type_private";
+    constexpr auto lua_field_convert = "__convert_private";
+  }
 }
 
 #endif
