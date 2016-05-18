@@ -8,6 +8,7 @@
 # include <lua.hpp>
 
 # include <vector>
+# include <map>
 
 namespace luacxx
 {
