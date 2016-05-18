@@ -5,7 +5,6 @@
 # include <luacxx/binding/bindable.hpp>
 # include <luacxx/binding/ctor_method.hpp>
 # include <luacxx/binding/dtor_method.hpp>
-# include <luacxx/binding/utility.hpp>
 
 # include <luacxx/core/policy.hpp>
 # include <luacxx/core/utility.hpp>
@@ -15,13 +14,156 @@
 # include <lua.hpp>
 
 namespace luacxx
-{  
+{
+  struct default_policy {};
+  struct custum_policy  {};
+
+  namespace detail
+  {
+    class index : public bindable
+    {
+      public:
+        inline index()
+        {
+        }
+
+        inline virtual bool bind(state_type state) override
+        {
+          lua_pushvalue(state, -1);
+          return true;
+        }
+    };
+
+    class wrapper_inheritance
+    {
+      public:
+        virtual ~wrapper_inheritance() {}
+
+        virtual bool check_dependency() const = 0;
+        virtual void link() = 0;
+    };
+
+    template <class C> class class_type_info : public type_info<C>
+    {
+      public:
+        typedef common_type_info::variable_type        variable_type;
+        typedef common_class_type_info::class_ptr_type class_ptr_type;
+        typedef common_class_type_info::class_field    class_field;
+
+        typedef C                            class_type;
+        typedef std::shared_ptr<class_type>  smart_type;
+
+        class_type_info(const std::string& class_meta_name)
+          : type_info<class_type>(&class_type_info::to_any_type_)
+          , class_meta_name_(class_meta_name)
+        {
+        }
+
+        virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const override
+        {
+          if(!check_arg_call<const smart_type>(error_msg, var))
+          {
+            to_lua_impl_<const smart_type, smart_type>(state, var, class_ptr_type::smart_ptr);
+          }
+          else if(!check_arg_call<class_type*>(error_msg, var))
+          {
+            error_msg.clear();
+            if(policy.has_parameter() && policy.get_parameter().is_delegate_owner())
+            {
+              smart_type        smart(cast_arg_call<class_type*>(var));
+              variable_type var_smart = smart;
+
+              to_lua_impl_<const smart_type, smart_type>(state, var_smart, class_ptr_type::smart_ptr);
+            }
+            else
+            {
+              to_lua_impl_<class_type*, class_type*>(state, var, class_ptr_type::raw_ptr);
+            }
+          }
+        }
+
+        virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node&) const override
+        {
+          std::pair<bool, class_field> ret = this->get_class_field(state, idx);
+          if(ret.first)
+          {
+            var = this->get_instance(ret.second);
+            if(var.empty())
+            {
+              error_msg = msg_error_invalid_object;
+            }
+          }
+          else
+          {
+            error_msg = msg_error_object_corrupted;
+          }
+        }
+
+      protected:
+        template <class Cast, class Store> void to_lua_impl_(state_type state, variable_type& var, class_ptr_type type) const
+        {
+          lua_newtable(state);
+
+          lua_pushstring(state, detail::lua_field_id);
+          lua_pushinteger(state, toolsbox::type_uid::get<class_type>());
+          lua_settable(state, -3);
+
+          lua_pushstring(state, detail::lua_field_type);
+          lua_pushinteger(state, static_cast<typename std::underlying_type<class_ptr_type>::type>(type));
+          lua_settable(state, -3);
+
+          lua_pushstring(state, detail::lua_field_ptr);
+          Store* ptr = (Store*) lua_newuserdata(state, sizeof(Store));
+          new (ptr) Store(cast_arg_call<Cast>(var));
+          lua_settable(state, -3);
+
+          if(*ptr == nullptr)
+          {
+            lua_pop(state, 1);
+            lua_pushnil(state);
+          }
+          else
+          {
+            luaL_getmetatable(state, class_meta_name_.c_str());
+            lua_setmetatable(state,  -2);
+          }
+        }
+
+        static toolsbox::any to_any_type_(const class_field& c)
+        {
+          toolsbox::any ret;
+          if(!c.ptr)
+          {
+            ret = smart_type();
+          }
+          else
+          {
+            switch(c.type)
+            {
+              case class_ptr_type::smart_ptr:
+                ret = *(smart_type*)c.ptr;
+                break;
+
+              case class_ptr_type::raw_ptr:
+                ret = *(class_type**)c.ptr;
+                break;
+            }
+          }
+          return ret;
+        }
+
+      private:
+        const std::string class_meta_name_;
+    };
+  }  
+
   template <class C> class wrapper_class : public bindable
   {
     public:
-      typedef C                           class_type;
-      typedef std::shared_ptr<class_type> smart_type;
-      typedef wrapper_class               self_type;
+      typedef C                                   class_type;
+      typedef detail::class_type_info<class_type> class_info_type;
+      typedef std::shared_ptr<class_type>         smart_type;
+      typedef wrapper_class                       self_type;
 
       wrapper_class(lookup_type& lookup, const std::string& module_name, const std::string& name)
         : lookup_(lookup)
@@ -30,6 +172,7 @@ namespace luacxx
         , class_meta_name_(module_name_    + "|" + name_ + "|class_meta")
         , instance_meta_name_(module_name_ + "|" + name_ + "|instance_meta")
       {
+        class_type_info_ = std::make_shared<class_info_type>(class_meta_name_);
         default_mth_();
       }
 
@@ -40,34 +183,24 @@ namespace luacxx
 
       virtual bool bind(state_type state) override
       {
-        // check
-        if(!check_dependency())
+        bool ret = (check_dependency() && bind_(state, class_meta_name_, class_bindables_) && bind_(state, instance_meta_name_, instance_bindables_));
+        if(ret)
         {
-          return false;
+          //
+          // attach table with meta table
+          lua_setmetatable(state,  -2);
+
+          //
+          // link with other
+          assert(!lookup_.exist<class_type>());
+          lookup_.set<class_type>(class_type_info_);
+
+          for(auto& type : inheritances_)
+          {
+            type->link();
+          }
         }
-
-        // class
-        if(!bind_(state, class_meta_name_, class_bindables_))
-        {
-          return false;
-        }
-
-        // instance
-        if(!bind_(state, instance_meta_name_, instance_bindables_))
-        {
-          return false;
-        }
-
-        //
-        // attach table with meta table
-        lua_setmetatable(state,  -2);
-
-        //
-        // add to lookup
-        assert(!lookup_.exist<class_type>());
-        lookup_.set<class_type>(std::make_shared<class_type_info>(*this));
-
-        return true;
+        return ret;
       }
 
       template <class Base> self_type& inheritance()
@@ -93,135 +226,18 @@ namespace luacxx
         return policy;
       }
 
-    protected:      
-      class class_type_info : public type_info<class_type>
+    protected:           
+      typedef std::unique_ptr<detail::wrapper_inheritance> inheritance_ptr_type;
+      typedef std::vector<inheritance_ptr_type>            inheritances_type;
+      typedef std::unique_ptr<bindable>                    bindable_ptr_type;
+      typedef std::map<std::string, bindable_ptr_type>     bindables_type;
+      typedef std::shared_ptr<class_info_type>             class_info_smart_type;
+
+      template <class I> class wrapper_inheritance_impl : public detail::wrapper_inheritance
       {
         public:
-          typedef common_type_info::variable_type variable_type;          
-
-          class_type_info(wrapper_class& owner)
-            : type_info<class_type>(common_type_info::underlying_type::Class)
-            , owner_(owner)
-          {
-          }
-
-          virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const override
-          {
-            if(!check_arg_call<const smart_type>(error_msg, var))
-            {
-              to_lua_impl_<const smart_type, smart_type>(state, var, detail::class_ptr_type::smart_ptr);
-            }
-            else if(!check_arg_call<class_type*>(error_msg, var))
-            {
-              error_msg.clear();
-              if(policy.has_parameter() && policy.get_parameter().is_delegate_owner())
-              {
-                smart_type        smart(cast_arg_call<class_type*>(var));
-                variable_type var_smart = smart;
-
-                to_lua_impl_<const smart_type, smart_type>(state, var_smart, detail::class_ptr_type::smart_ptr);
-              }
-              else
-              {
-                to_lua_impl_<class_type*, class_type*>(state, var, detail::class_ptr_type::raw_ptr);
-              }
-            }
-          }
-
-          virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node&) const override
-          {
-            std::pair<bool, detail::class_ptr> ret = detail::get_class_ptr<class_type>(state, idx);
-            if(ret.first)
-            {
-              if(ret.second.id != toolsbox::type_uid::get<class_type>())
-              {
-                // need cast
-                // TODO
-              }
-
-              if(ret.second.id != toolsbox::type_uid::get<class_type>())
-              {
-                error_msg = msg_error_invalid_cast_object;
-              }
-              else
-              {
-                if(ret.second.ptr)
-                {                  
-                  switch(ret.second.type)
-                  {
-                    case detail::class_ptr_type::smart_ptr:
-                      var = *(smart_type*)ret.second.ptr;
-                      break;
-
-                    case detail::class_ptr_type::raw_ptr:
-                      var = *(class_type**)ret.second.ptr;
-                      break;
-                  }
-                }
-                else
-                {
-                  var = smart_type();
-                }
-
-                lua_remove(state, idx);
-              }
-            }
-            else
-            {
-              error_msg = msg_error_invalid_object;
-            }
-          }
-
-        protected:
-          template <class Cast, class Store> void to_lua_impl_(state_type state, variable_type& var, detail::class_ptr_type type) const
-          {
-            lua_newtable(state);
-
-            lua_pushstring(state, detail::lua_field_id);
-            lua_pushinteger(state, toolsbox::type_uid::get<class_type>());
-            lua_settable(state, -3);
-
-            lua_pushstring(state, detail::lua_field_type);
-            lua_pushinteger(state, static_cast<typename std::underlying_type<detail::class_ptr_type>::type>(type));
-            lua_settable(state, -3);
-
-            lua_pushstring(state, detail::lua_field_ptr);
-            Store* ptr = (Store*) lua_newuserdata(state, sizeof(Store));
-            new (ptr) Store(cast_arg_call<Cast>(var));
-            lua_settable(state, -3);
-
-            if(*ptr == nullptr)
-            {
-              lua_pop(state, 1);
-              lua_pushnil(state);
-            }
-            else
-            {
-              luaL_getmetatable(state, owner_.class_meta_name_.c_str());
-              lua_setmetatable(state,  -2);
-            }
-          }        
-
-        private:
-          wrapper_class& owner_;
-      };
-
-      class wrapper_inheritance
-      {
-        public:
-          virtual ~wrapper_inheritance() {}
-
-          virtual bool check_dependency() const = 0;
-          virtual toolsbox::type_uid::id_type get_id() const = 0;
-          virtual detail::class_cast get_class_cast() const = 0;
-      };
-
-      template <class I> class wrapper_inheritance_impl : public wrapper_inheritance
-      {
-        public:
-          typedef I inheritance_class;
-          typedef typename wrapper_class<inheritance_class>::smart_type inheritance_smart_type;
-          //typedef typename wrapper_class<inheritance_class>::class_type_info inheritance_class_type_info;
+          typedef I                                  inheritance_class;
+          typedef std::shared_ptr<inheritance_class> smart_inheritance_class;
 
           wrapper_inheritance_impl(wrapper_class& owner)
             : owner_(owner)
@@ -234,61 +250,38 @@ namespace luacxx
             return owner_.lookup_.template exist<inheritance_class>();
           }
 
-          virtual toolsbox::type_uid::id_type get_id() const override
+          virtual void link() override
           {
-            return  get_id_();
-          }
-
-          virtual detail::class_cast get_class_cast() const override
-          {
-            return &wrapper_inheritance_impl::cast;
+            type_info<inheritance_class>& in = owner_.lookup_.template get<inheritance_class>();
+            in.add_base(&wrapper_inheritance_impl::cast_type_, owner_.class_type_info_);
           }
 
         protected:
-          static toolsbox::type_uid::id_type get_id_()
+          static void cast_type_(toolsbox::any& a)
           {
-            return toolsbox::type_uid::get<inheritance_class>();
-          }
+            assert(a.is<class_type*>() || a.is<smart_type>());
+            static const toolsbox::type_uid::id_type class_id = toolsbox::type_uid::get<class_type*>();
+            static const toolsbox::type_uid::id_type smart_id = toolsbox::type_uid::get<smart_type>();
 
-          static detail::class_ptr cast(const detail::class_ptr& ptr)
-          {
-            detail::class_ptr sub_ptr {nullptr, ptr.type , get_id_()};
+            toolsbox::type_uid::id_type id = a.get_id();
+            toolsbox::any new_a;
 
-            switch(ptr.type)
+            if(id == class_id)
             {
-              case detail::class_ptr_type::smart_ptr:
-                //sub_ptr.ptr = ()(smart_type*)ret.second.ptr;
-                break;
-
-              case detail::class_ptr_type::raw_ptr:
-                //sub_ptr.ptr = &((inheritance_class*)*(class_type**)ptr.ptr);
-                break;
+              inheritance_class* tmp = a.as<class_type*>();
+              new_a = std::move(tmp);
+            }
+            else if(id == smart_id)
+            {
+              smart_inheritance_class tmp = a.as<smart_type>();
+              new_a = std::move(tmp);
             }
 
-            return sub_ptr;
+            std::swap(a, new_a);
           }
 
         private:
           wrapper_class& owner_;
-      };
-
-      typedef std::unique_ptr<wrapper_inheritance>     inheritance_ptr_type;
-      typedef std::vector<inheritance_ptr_type>        inheritances_type;
-      typedef std::unique_ptr<bindable>                bindable_ptr_type;
-      typedef std::map<std::string, bindable_ptr_type> bindables_type;
-
-      class index : public bindable
-      {
-        public:
-          index()
-          {
-          }
-
-          virtual bool bind(state_type state) override
-          {
-            lua_pushvalue(state, -1);
-            return true;
-          }
       };
 
       bool check_dependency() const
@@ -324,17 +317,19 @@ namespace luacxx
       {
         typedef dtor_method<class_type> dtor_method_type;
 
-        class_bindables_[detail::lua_field_gc]    = std::make_unique<dtor_method_type>();
-        class_bindables_[detail::lua_field_index] = std::make_unique<index>();
-      }
+        class_bindables_[detail::lua_field_gc]    = std::make_unique<dtor_method_type>(class_type_info_);
+        class_bindables_[detail::lua_field_index] = std::make_unique<detail::index>();
+      }            
 
     private:
-      lookup_type&      lookup_;
-      const std::string module_name_;
-      const std::string name_;
-      inheritances_type inheritances_;
-      bindables_type    class_bindables_;
-      bindables_type    instance_bindables_;
+      lookup_type&          lookup_;
+      const std::string     module_name_;
+      const std::string     name_;
+      inheritances_type     inheritances_;
+      bindables_type        class_bindables_;
+      bindables_type        instance_bindables_;
+      class_info_smart_type class_type_info_;
+
 
       const std::string class_meta_name_;
       const std::string instance_meta_name_;

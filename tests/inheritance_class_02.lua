@@ -8,8 +8,8 @@ assert(fct2(l2));
 assert(fct3(l2));
 
 local l3 = DerivatedDerivatedAB();
-assert(fct1(l2));
-assert(fct2(l2));
-assert(fct4(l2));
+assert(fct1(l3));
+assert(fct2(l3));
+assert(fct4(l3));
 
 

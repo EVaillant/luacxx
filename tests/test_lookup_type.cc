@@ -17,7 +17,7 @@ namespace
   {
     public:
       blabla_type_info()
-        : type_info<blabla>(luacxx::common_type_info::underlying_type::Class)
+        : type_info<blabla>(nullptr)
       {
       }
 
