@@ -17,6 +17,7 @@ namespace luacxx
   constexpr auto msg_error_invalid_object        = "invalid object";
   constexpr auto msg_error_invalid_cast_object   = "invalid object cast";
   constexpr auto msg_error_object_corrupted      = "object corrupted";
+  constexpr auto msg_error_null_object           = "null object";
 
   //
   // field

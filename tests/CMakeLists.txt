@@ -26,6 +26,7 @@ if (Boost_FOUND)
     test_function.cc
     test_class.cc
     test_inheritance_class.cc
+    test_method_class.cc
   )
   target_link_libraries(
     test_binding

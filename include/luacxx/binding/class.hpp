@@ -5,6 +5,7 @@
 # include <luacxx/binding/bindable.hpp>
 # include <luacxx/binding/ctor_method.hpp>
 # include <luacxx/binding/dtor_method.hpp>
+# include <luacxx/binding/method.hpp>
 
 # include <luacxx/core/policy.hpp>
 # include <luacxx/core/utility.hpp>
@@ -223,6 +224,56 @@ namespace luacxx
         std::unique_ptr<ctor_method_type> ctor = std::make_unique<ctor_method_type>(lookup_, *this);
         policy_type &policy = ctor->get_policy();
         instance_bindables_[detail::lua_field_call] = std::move(ctor);
+        return policy;
+      }
+
+      template <class R, class ... ARGS> auto& method(const std::string& name, R (class_type::*mth)(ARGS ...), const default_policy& = default_policy())
+      {
+        this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& method(const std::string& name, R (class_type::*mth)(ARGS ...), const custum_policy&)
+      {
+        return this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+      }
+
+      template <class R, class ... ARGS> auto& const_method(const std::string& name, R (class_type::*mth)(ARGS ...) const, const default_policy& = default_policy())
+      {
+        this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& const_method(const std::string& name, R (class_type::*mth)(ARGS ...) const, const custum_policy&)
+      {
+        return this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+      }
+
+      template <class R, class ... ARGS> auto& extern_method(const std::string& name, R (*mth)(class_type*, ARGS ...), const default_policy& = default_policy())
+      {
+        this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& extern_method(const std::string& name, R (*mth)(class_type*, ARGS ...), const custum_policy&)
+      {
+        return this->extern_method<R, ARGS...>(name, std::function<R (class_type*, ARGS ...)>(mth), custum_policy());
+      }
+
+      template <class R, class ... ARGS> auto& extern_method(const std::string& name, const std::function<R (class_type*, ARGS ...)>& functor, const default_policy& = default_policy())
+      {
+        this->extern_method<R, ARGS...>(name, functor, custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& extern_method(const std::string& name, const std::function<R (class_type*, ARGS ...)>& functor, const custum_policy&)
+      {
+        typedef luacxx::method<self_type, class_type, R, ARGS...> method_type;
+        typedef typename method_type::policy_type                 policy_type;
+
+        std::unique_ptr<method_type> mth = std::make_unique<method_type>(lookup_, *this, class_type_info_, functor);
+        policy_type &policy = mth->get_policy();
+        class_bindables_[name] = std::move(mth);
         return policy;
       }
 
