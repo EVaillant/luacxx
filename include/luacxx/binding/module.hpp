@@ -48,6 +48,8 @@ namespace luacxx
         return ret;
       }
 
+      virtual void get_symbol(state_type state, const std::string& name) = 0;
+
     protected:
       struct bindable_data
       {
@@ -122,6 +124,11 @@ namespace luacxx
         return ret;
       }
 
+      inline virtual void get_symbol(state_type state, const std::string& name) override
+      {
+        lua_getglobal(state, name.c_str());
+      }
+
     private:
       class sub_module : public module,  public bindable
       {
@@ -181,6 +188,15 @@ namespace luacxx
           {
             module::add(name, std::move(bindable));
             owner_.reset_loaded_status_(name_);
+          }
+
+          inline virtual void get_symbol(state_type state, const std::string& name) override
+          {
+            luaL_getsubtable(state, LUA_REGISTRYINDEX, "_LOADED");
+            lua_getfield(state, -1, name_.c_str());
+            lua_getfield(state, -1, name.c_str());
+            lua_remove(state, -2);
+            lua_remove(state, -2);
           }
 
         private:

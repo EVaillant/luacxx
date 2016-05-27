@@ -53,7 +53,7 @@ namespace luacxx
       underlying_type underlying_type_;
   };
 
-  class common_class_type_info
+  class common_class_type_info : public common_type_info
   {
     public:
       typedef common_class_type_info      self_type;
@@ -76,8 +76,9 @@ namespace luacxx
       typedef toolsbox::any (*to_any_type)(const class_field& c);
       typedef void (*cast_type)(toolsbox::any& c);
 
-      inline common_class_type_info(class_id_type id, to_any_type to_cast)
-        : class_id_(id)
+      inline common_class_type_info(underlying_type ut, class_id_type id, to_any_type to_cast)
+        : common_type_info(ut)
+        , class_id_(id)
         , to_cast_(to_cast)
       {
       }
@@ -187,6 +188,9 @@ namespace luacxx
         bases_.push_back(std::make_pair(cast, base));
       }
 
+      virtual const std::string& get_module_name() const = 0;
+      virtual const std::string& get_class_name() const = 0;
+
     protected:
       struct convert_mapping
       {
@@ -244,12 +248,11 @@ namespace luacxx
       }
   };
 
-  template <class C> class type_info<C, typename std::enable_if<std::is_class<C>::value>::type> : public common_type_info, public common_class_type_info
+  template <class C> class type_info<C, typename std::enable_if<!std::is_same<std::string, C>::value && std::is_class<C>::value>::type> : public common_class_type_info
   {
     public:
       type_info(underlying_type ut, common_class_type_info::to_any_type to)
-        : common_type_info(ut)
-        , common_class_type_info(toolsbox::type_uid::get<C>(), to)
+        : common_class_type_info(ut, toolsbox::type_uid::get<C>(), to)
       {
       }
 
@@ -264,7 +267,7 @@ namespace luacxx
       }
   };
 
-  template <class T> class empty_type_info : public type_info<T>
+  template <class T, class D = void> class empty_type_info : public type_info<T>
   {
     public:
       typedef T type;
@@ -283,6 +286,40 @@ namespace luacxx
       virtual void from_lua(state_type, std::size_t, variable_type& , std::string& error_msg, const policy_node&) const override
       {
         error_msg = msg_error_type_not_supported;
+      }
+  };
+
+  template <class T> class empty_type_info<T, typename std::enable_if<!std::is_same<std::string, T>::value && std::is_class<T>::value>::type> : public type_info<T>
+  {
+    public:
+      typedef T type;
+      typedef common_type_info::variable_type variable_type;
+
+      empty_type_info()
+        : type_info<T>(common_type_info::underlying_type::Unknown)
+      {
+      }
+
+      virtual void to_lua(state_type, variable_type&, std::string &error_msg, const policy_node&) const override
+      {
+        error_msg = msg_error_type_not_supported;
+      }
+
+      virtual void from_lua(state_type, std::size_t, variable_type& , std::string& error_msg, const policy_node&) const override
+      {
+        error_msg = msg_error_type_not_supported;
+      }
+
+      virtual const std::string& get_module_name() const override
+      {
+        static std::string empty;
+        return empty;
+      }
+
+      virtual const std::string& get_class_name() const override
+      {
+        static std::string empty;
+        return empty;
       }
   };
 }

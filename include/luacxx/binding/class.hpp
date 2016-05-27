@@ -42,6 +42,73 @@ namespace luacxx
 
         virtual bool check_dependency() const = 0;
         virtual void link() = 0;
+        virtual const std::string& get_module_name() const = 0;
+        virtual const std::string& get_class_name() const = 0;
+    };
+
+    class inheritance_index : public callable
+    {
+      public:
+        typedef std::unique_ptr<wrapper_inheritance> inheritance_ptr_type;
+        typedef std::vector<inheritance_ptr_type>    inheritances_type;
+
+        inheritance_index(engine& e, inheritances_type& inheritances)
+          : engine_(e)
+          , inheritances_(inheritances)
+        {
+        }
+
+        inline virtual bool bind(state_type state) override
+        {
+          if(inheritances_.size() == 1)
+          {
+            inheritance_ptr_type& inheritance = *inheritances_.begin();
+            get_symbol_(state, *inheritance);
+          }
+          else
+          {
+            callable::bind(state);
+          }
+          return 1;
+        }
+
+      protected:
+        inline virtual int invoke_(state_type state) override
+        {
+          bool found = false;
+          if(lua_isstring(state, -1))
+          {
+            std::string method_name = lua_tostring(state, -1);
+            lua_pop(state, 2);
+
+            for(inheritance_ptr_type& inheritance : inheritances_)
+            {
+              get_symbol_(state, *inheritance);
+              lua_getfield(state, -1, method_name.c_str());
+              if(lua_iscfunction(state, -1))
+              {
+                lua_remove(state, -2);
+                lua_remove(state, -2);
+                found = true;
+                break;
+              }
+              else
+              {
+                lua_pop(state, 2);
+              }
+            }
+          }
+          return found;
+        }
+
+        void get_symbol_(state_type state, wrapper_inheritance& inheritance)
+        {
+          engine_.get_module(inheritance.get_module_name()).get_symbol(state, inheritance.get_class_name());
+        }
+
+      private:
+        engine&            engine_;
+        inheritances_type& inheritances_;
     };
 
     template <class C> class class_type_info : public type_info<C>
@@ -54,9 +121,11 @@ namespace luacxx
         typedef C                            class_type;
         typedef std::shared_ptr<class_type>  smart_type;
 
-        class_type_info(const std::string& class_meta_name)
+        class_type_info(const std::string& module_name, const std::string& class_name, const std::string& class_meta_name)
           : type_info<class_type>(&class_type_info::to_any_type_)
           , class_meta_name_(class_meta_name)
+          , class_name_(class_name)
+          , module_name_(module_name)
         {
         }
 
@@ -98,6 +167,16 @@ namespace luacxx
           {
             error_msg = msg_error_object_corrupted;
           }
+        }
+
+        virtual const std::string& get_module_name() const override
+        {
+          return module_name_;
+        }
+
+        virtual const std::string& get_class_name() const override
+        {
+          return class_name_;
         }
 
       protected:
@@ -154,7 +233,77 @@ namespace luacxx
         }
 
       private:
-        const std::string class_meta_name_;
+        const std::string  class_meta_name_;
+        const std::string& class_name_;
+        const std::string& module_name_;
+    };
+
+    template <class T, class I> class wrapper_inheritance_impl : public wrapper_inheritance
+    {
+      public:
+        typedef T                                   class_type;
+        typedef I                                   inheritance_class;
+        typedef std::shared_ptr<class_type>         smart_type;
+        typedef std::shared_ptr<inheritance_class>  smart_inheritance_class;
+        typedef std::shared_ptr<class_type_info<T>> class_info_smart_type;
+
+        wrapper_inheritance_impl(lookup_type& lookup, const class_info_smart_type& class_type_info)
+          : lookup_(lookup)
+          , class_type_info_(class_type_info)
+        {
+          static_assert(std::is_base_of<inheritance_class, class_type>::value, "invalid inheritance");
+        }
+
+        virtual bool check_dependency() const override
+        {
+          return lookup_.template exist<inheritance_class>();
+        }
+
+        virtual void link() override
+        {
+          type_info<inheritance_class>& in = lookup_.template get<inheritance_class>();
+          in.add_base(&wrapper_inheritance_impl::cast_type_, class_type_info_);
+        }
+
+        virtual const std::string& get_module_name() const override
+        {
+          type_info<inheritance_class>& in = lookup_.template get<inheritance_class>();
+          return in.get_module_name();
+        }
+
+        virtual const std::string& get_class_name() const override
+        {
+          type_info<inheritance_class>& in = lookup_.template get<inheritance_class>();
+          return in.get_class_name();
+        }
+
+      protected:
+        static void cast_type_(toolsbox::any& a)
+        {
+          assert(a.is<class_type*>() || a.is<smart_type>());
+          static const toolsbox::type_uid::id_type class_id = toolsbox::type_uid::get<class_type*>();
+          static const toolsbox::type_uid::id_type smart_id = toolsbox::type_uid::get<smart_type>();
+
+          toolsbox::type_uid::id_type id = a.get_id();
+          toolsbox::any new_a;
+
+          if(id == class_id)
+          {
+            inheritance_class* tmp = a.as<class_type*>();
+            new_a = std::move(tmp);
+          }
+          else if(id == smart_id)
+          {
+            smart_inheritance_class tmp = a.as<smart_type>();
+            new_a = std::move(tmp);
+          }
+
+          std::swap(a, new_a);
+        }
+
+      private:
+        lookup_type&          lookup_;
+        class_info_smart_type class_type_info_;
     };
   }  
 
@@ -166,14 +315,15 @@ namespace luacxx
       typedef std::shared_ptr<class_type>         smart_type;
       typedef wrapper_class                       self_type;
 
-      wrapper_class(lookup_type& lookup, const std::string& module_name, const std::string& name)
-        : lookup_(lookup)
+      wrapper_class(engine& e, lookup_type& lookup, const std::string& module_name, const std::string& name)
+        : engine_(e)
+        , lookup_(lookup)
         , module_name_(module_name)
         , name_(name)
         , class_meta_name_(module_name_    + "|" + name_ + "|class_meta")
         , instance_meta_name_(module_name_ + "|" + name_ + "|instance_meta")
       {
-        class_type_info_ = std::make_shared<class_info_type>(class_meta_name_);
+        class_type_info_ = std::make_shared<class_info_type>(module_name_, name_, class_meta_name_);
         default_mth_();
       }
 
@@ -206,7 +356,11 @@ namespace luacxx
 
       template <class Base> self_type& inheritance()
       {
-        inheritances_.push_back(std::make_unique<wrapper_inheritance_impl<Base>>(*this));
+        if(inheritances_.empty())
+        {
+          instance_bindables_[detail::lua_field_index] = std::make_unique<detail::inheritance_index>(engine_, inheritances_);
+        }
+        inheritances_.push_back(std::make_unique<detail::wrapper_inheritance_impl<class_type, Base>>(lookup_, class_type_info_));
         return *this;
       }
 
@@ -282,58 +436,7 @@ namespace luacxx
       typedef std::vector<inheritance_ptr_type>            inheritances_type;
       typedef std::unique_ptr<bindable>                    bindable_ptr_type;
       typedef std::map<std::string, bindable_ptr_type>     bindables_type;
-      typedef std::shared_ptr<class_info_type>             class_info_smart_type;
-
-      template <class I> class wrapper_inheritance_impl : public detail::wrapper_inheritance
-      {
-        public:
-          typedef I                                  inheritance_class;
-          typedef std::shared_ptr<inheritance_class> smart_inheritance_class;
-
-          wrapper_inheritance_impl(wrapper_class& owner)
-            : owner_(owner)
-          {
-            static_assert(std::is_base_of<inheritance_class, class_type>::value, "invalid inheritance");
-          }
-
-          virtual bool check_dependency() const override
-          {
-            return owner_.lookup_.template exist<inheritance_class>();
-          }
-
-          virtual void link() override
-          {
-            type_info<inheritance_class>& in = owner_.lookup_.template get<inheritance_class>();
-            in.add_base(&wrapper_inheritance_impl::cast_type_, owner_.class_type_info_);
-          }
-
-        protected:
-          static void cast_type_(toolsbox::any& a)
-          {
-            assert(a.is<class_type*>() || a.is<smart_type>());
-            static const toolsbox::type_uid::id_type class_id = toolsbox::type_uid::get<class_type*>();
-            static const toolsbox::type_uid::id_type smart_id = toolsbox::type_uid::get<smart_type>();
-
-            toolsbox::type_uid::id_type id = a.get_id();
-            toolsbox::any new_a;
-
-            if(id == class_id)
-            {
-              inheritance_class* tmp = a.as<class_type*>();
-              new_a = std::move(tmp);
-            }
-            else if(id == smart_id)
-            {
-              smart_inheritance_class tmp = a.as<smart_type>();
-              new_a = std::move(tmp);
-            }
-
-            std::swap(a, new_a);
-          }
-
-        private:
-          wrapper_class& owner_;
-      };
+      typedef std::shared_ptr<class_info_type>             class_info_smart_type;      
 
       bool check_dependency() const
       {
@@ -373,6 +476,7 @@ namespace luacxx
       }            
 
     private:
+      engine&               engine_;
       lookup_type&          lookup_;
       const std::string     module_name_;
       const std::string     name_;
@@ -381,7 +485,6 @@ namespace luacxx
       bindables_type        instance_bindables_;
       class_info_smart_type class_type_info_;
 
-
       const std::string class_meta_name_;
       const std::string instance_meta_name_;
   };
@@ -389,7 +492,7 @@ namespace luacxx
   template <class C> auto& make_class(engine& e, const std::string& module_name, const std::string& name)
   {
     typedef wrapper_class<C> wrapper_type;
-    std::unique_ptr<wrapper_type> wrapper = std::make_unique<wrapper_type>(e.get_lookup_type(), module_name, name);
+    std::unique_ptr<wrapper_type> wrapper = std::make_unique<wrapper_type>(e, e.get_lookup_type(), module_name, name);
     wrapper_type&                     ret = *wrapper;
     module &m = e.get_module(module_name);
     m.add(name, std::move(wrapper));
