@@ -7,6 +7,7 @@
 #include <luacxx/binding/bindable.hpp>
 
 #include <luacxx/core/lookup_type.hpp>
+#include <luacxx/helper/stack.hpp>
 #include <luacxx/core/basic_type_info.hpp>
 
 #include "helper.hpp"
@@ -107,5 +108,35 @@ BOOST_AUTO_TEST_CASE( module_02 )
     {
       BOOST_FAIL(lua_tostring(state, -1));
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE( module_03 )
+{
+  luacxx::lookup_type lookup;
+  lookup.set<bool>(std::make_shared<luacxx::bool_type_info>());
+  lookup.set<std::string>(std::make_shared<luacxx::string_type_info<std::string>>());
+  lookup.set<int>(std::make_shared<luacxx::integer_type_info<int>>());
+  lookup.set<double>(std::make_shared<luacxx::number_type_info<double>>());
+
+  {
+    lua_state_guard       state;
+    luacxx::global_module module;
+
+    std::unique_ptr<const_integer_field> c1 = std::make_unique<const_integer_field>(5);
+    std::unique_ptr<const_integer_field> c2 = std::make_unique<const_integer_field>(20);
+    std::unique_ptr<const_integer_field> c3 = std::make_unique<const_integer_field>(30);
+
+    module.get_module("").add("bla1", std::move(c1));
+    module.get_module("some.thing").add("bla2", std::move(c2));
+    module.get_module("some.thing").add("bla3", std::move(c3));
+    module.bind(state);
+
+    module.get_module("").get_symbol(state, "bla1");
+    BOOST_CHECK_EQUAL("i'5'", luacxx::dump_stack(state, -1));
+    module.get_module("some.thing").get_symbol(state, "bla2");
+    BOOST_CHECK_EQUAL("i'20'", luacxx::dump_stack(state, -1));
+    module.get_module("some.thing").get_symbol(state, "bla3");
+    BOOST_CHECK_EQUAL("i'30'", luacxx::dump_stack(state, -1));
   }
 }

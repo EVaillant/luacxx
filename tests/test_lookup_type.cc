@@ -28,6 +28,18 @@ namespace
       virtual void from_lua(luacxx::state_type, std::size_t, common_type_info::variable_type& , std::string&, const luacxx::policy_node&) const override
       {
       }
+
+      virtual const std::string& get_module_name() const override
+      {
+        static std::string empty;
+        return empty;
+      }
+
+      virtual const std::string& get_class_name() const override
+      {
+        static std::string empty;
+        return empty;
+      }
   };
 
   class int_type_info : public luacxx::type_info<int>

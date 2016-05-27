@@ -203,7 +203,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<Container<int>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',i'1')(i'2',i'2')(i'3',i'4')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',i'1')(i'2',i'2')(i'3',i'4')'", luacxx::dump_stack(state));
     }
 
     {
@@ -217,7 +217,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<Container<double>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',n'1.5')(i'2',n'2')(i'3',n'4.9')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',n'1.5')(i'2',n'2')(i'3',n'4.9')'", luacxx::dump_stack(state));
     }
 
     {
@@ -231,7 +231,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<Container<bool>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',b'false')(i'2',b'true')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',b'false')(i'2',b'true')'", luacxx::dump_stack(state));
     }
 
     {
@@ -245,7 +245,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<Container<std::string>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", luacxx::dump_stack(state));
     }
 
     {
@@ -259,7 +259,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<Container<const char*>>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',s'grgr')(i'2',s'poiu')(i'3',s'rr')'", luacxx::dump_stack(state));
     }
   }
 }
@@ -422,7 +422,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", luacxx::dump_stack(state));
     }
 
     {
@@ -438,7 +438,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(n'5.8',s'888')(n'1.5',s'aaa')(n'45.9',s'uiyui')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(n'5.8',s'888')(n'1.5',s'aaa')(n'45.9',s'uiyui')'", luacxx::dump_stack(state));
     }
 
     {
@@ -454,7 +454,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(b'false',s'888')(b'true',s'aaa')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(b'false',s'888')(b'true',s'aaa')'", luacxx::dump_stack(state));
     }
 
     {
@@ -470,7 +470,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", luacxx::dump_stack(state));
     }
 
     {
@@ -486,7 +486,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(s'5',s'888')(s'1',s'aaa')(s'45',s'uiyui')'", luacxx::dump_stack(state));
     }
 
     {
@@ -502,7 +502,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'5',s'888')(i'1',s'aaa')(i'45',s'uiyui')'", luacxx::dump_stack(state));
     }
 
     {
@@ -518,7 +518,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'5',b'false')(i'45',b'true')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'5',b'false')(i'45',b'true')'", luacxx::dump_stack(state));
     }
 
     {
@@ -534,7 +534,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'45',i'66')(i'5',i'888')(i'1',i'9')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'45',i'66')(i'5',i'888')(i'1',i'9')'", luacxx::dump_stack(state));
     }
 
     {
@@ -550,7 +550,7 @@ namespace
 
       BOOST_CHECK(luacxx::convert_to<container_type>(state, lookup, any, error_msg, policy));
       BOOST_CHECK(error_msg.empty());
-      BOOST_CHECK_EQUAL("t'(i'1',n'5.9')(i'5',n'7.9')(i'45',n'8.5')'", luacxx::dump_stack(state));
+      BOOST_CHECK_EQUAL("t[0]'(i'1',n'5.9')(i'5',n'7.9')(i'45',n'8.5')'", luacxx::dump_stack(state));
     }
   }
 }
