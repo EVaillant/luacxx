@@ -105,7 +105,7 @@ namespace luacxx
           const parameter_policy& parameter = policy.get_parameter();
           if(parameter.is_input())
           {
-            if(lua_isnone(state, idx_))
+            if(lua_isnone(state, idx_) && !std::is_same<arg_type, state_type>::value)
             {
               if(parameter.has_default_value())
               {
@@ -124,14 +124,19 @@ namespace luacxx
                 check_arg_call<arg_type>(msg, ret);
               }
             }
-            if(!msg.empty())
-            {
-              msg += " (" + std::to_string(I+1) + ")";
-            }
           }
           else
           {
             ret = default_initializer<arg_type>::create(lookup_);
+            if(ret.empty())
+            {
+              msg = msg_error_type_not_supported;
+            }
+          }
+
+          if(!msg.empty())
+          {
+            msg += " (" + std::to_string(I+1) + ")";
           }
         }
         return std::make_tuple(ret);

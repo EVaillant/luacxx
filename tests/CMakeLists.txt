@@ -27,6 +27,8 @@ if (Boost_FOUND)
     test_class.cc
     test_inheritance_class.cc
     test_method_class.cc
+    test_incomplete.cc
+    incomplete_data.cc
   )
   target_link_libraries(
     test_binding

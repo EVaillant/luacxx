@@ -181,7 +181,7 @@ namespace luacxx
         }
     };
 
-    template <class T> class arg_call<T*, typename std::enable_if<!std::is_const<T>::value>::type>
+    template <class T> class arg_call<T*, typename std::enable_if<!std::is_const<T>::value  && !is_incomplete<T>::value>::type>
     {
       public:
         typedef std::decay_t<T*>                 type;
@@ -237,6 +237,61 @@ namespace luacxx
             {toolsbox::type_uid::get<shared_type>(),        self_type::convert_shared_<shared_type>},
             {toolsbox::type_uid::get<const shared_type&>(), self_type::convert_shared_<const shared_type&>},
             {toolsbox::type_uid::get<shared_type&>(),       self_type::convert_shared_<shared_type&>}
+          }};
+
+          assert(check_table(convert_tables));
+
+          for(const convert_table& table : convert_tables)
+          {
+            if(id == table.id)
+            {
+              return table.convert;
+            }
+          }
+
+          return nullptr;
+        }
+    };
+
+    template <class T> class arg_call<T*, typename std::enable_if<!std::is_const<T>::value  && is_incomplete<T>::value>::type>
+    {
+      public:
+        typedef std::decay_t<T*>                 type;
+        typedef arg_call                         self_type;
+        typedef T*                               return_type;
+
+        static bool check(const toolsbox::any& value)
+        {
+          functor_type fct = (value.empty() ? nullptr : get_functor_(value.get_id()));
+          return fct != nullptr;
+        }
+
+        static return_type convert(toolsbox::any& any)
+        {
+          assert(check(any));
+          functor_type fct = get_functor_(any.get_id());
+          return (*fct)(any);
+        }
+
+      private:
+        typedef return_type (*functor_type)(toolsbox::any&);
+
+        template <class U> static return_type convert_type_(toolsbox::any& any)
+        {
+          return any.as<U>();
+        }
+
+        static functor_type get_functor_(toolsbox::type_uid::id_type id)
+        {
+          struct convert_table {
+              toolsbox::type_uid::id_type id;
+              functor_type                convert;
+          };
+
+          static const std::array<convert_table, 3> convert_tables = {{
+            {toolsbox::type_uid::get<type>(),               self_type::convert_type_<type>},
+            {toolsbox::type_uid::get<type&>(),              self_type::convert_type_<type&>},
+            {toolsbox::type_uid::get<const type&>(),        self_type::convert_type_<const type&>},
           }};
 
           assert(check_table(convert_tables));

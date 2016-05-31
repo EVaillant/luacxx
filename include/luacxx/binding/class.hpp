@@ -131,25 +131,7 @@ namespace luacxx
 
         virtual void to_lua(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const override
         {
-          if(!check_arg_call<const smart_type>(error_msg, var))
-          {
-            to_lua_impl_<const smart_type, smart_type>(state, var, class_ptr_type::smart_ptr);
-          }
-          else if(!check_arg_call<class_type*>(error_msg, var))
-          {
-            error_msg.clear();
-            if(policy.has_parameter() && policy.get_parameter().is_delegate_owner())
-            {
-              smart_type        smart(cast_arg_call<class_type*>(var));
-              variable_type var_smart = smart;
-
-              to_lua_impl_<const smart_type, smart_type>(state, var_smart, class_ptr_type::smart_ptr);
-            }
-            else
-            {
-              to_lua_impl_<class_type*, class_type*>(state, var, class_ptr_type::raw_ptr);
-            }
-          }
+          to_lua_<class_type>(state, var, error_msg, policy);
         }
 
         virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node&) const override
@@ -180,6 +162,42 @@ namespace luacxx
         }
 
       protected:
+        template <class T> typename std::enable_if<!is_incomplete<T>::value>::type to_lua_(state_type state, variable_type& var, std::string &error_msg, const policy_node& policy) const
+        {
+          if(!check_arg_call<const smart_type>(error_msg, var))
+          {
+            to_lua_impl_<const smart_type, smart_type>(state, var, class_ptr_type::smart_ptr);
+          }
+          else if(!check_arg_call<class_type*>(error_msg, var))
+          {
+            error_msg.clear();
+            if(policy.has_parameter() && policy.get_parameter().is_delegate_owner())
+            {
+              smart_type        smart(cast_arg_call<class_type*>(var));
+              variable_type var_smart = smart;
+
+              to_lua_impl_<const smart_type, smart_type>(state, var_smart, class_ptr_type::smart_ptr);
+            }
+            else
+            {
+              to_lua_impl_<class_type*, class_type*>(state, var, class_ptr_type::raw_ptr);
+            }
+          }
+        }
+
+        template <class T> typename std::enable_if< is_incomplete<T>::value>::type to_lua_(state_type state, variable_type& var, std::string &error_msg, const policy_node&) const
+        {
+          if(!check_arg_call<const smart_type>(error_msg, var))
+          {
+            to_lua_impl_<const smart_type, smart_type>(state, var, class_ptr_type::smart_ptr);
+          }
+          else if(!check_arg_call<class_type*>(error_msg, var))
+          {
+            error_msg.clear();
+            to_lua_impl_<class_type*, class_type*>(state, var, class_ptr_type::raw_ptr);
+          }
+        }
+
         template <class Cast, class Store> void to_lua_impl_(state_type state, variable_type& var, class_ptr_type type) const
         {
           lua_newtable(state);

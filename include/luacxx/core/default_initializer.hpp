@@ -7,6 +7,45 @@
 
 namespace luacxx
 {
+  namespace detail
+  {
+    template <class T, class D = void> struct default_initializer_impl
+    {
+    };
+
+    template <class T> struct default_initializer_impl<T, typename std::enable_if<!is_incomplete<T>::value>::type>
+    {
+      typedef T type;
+      typedef toolsbox::any return_type;
+
+      static return_type create()
+      {
+        return type();
+      }
+
+      static return_type shared()
+      {
+        return std::make_shared<type>();
+      }
+    };
+
+    template <class T> struct default_initializer_impl<T, typename std::enable_if<is_incomplete<T>::value>::type>
+    {
+      typedef T type;
+      typedef toolsbox::any return_type;
+
+      static return_type create()
+      {
+        return return_type();
+      }
+
+      static return_type shared()
+      {
+        return return_type();
+      }
+    };
+  }
+
   template <class T, class D = std::decay_t<T>> struct default_initializer
   {
     typedef typename register_type<T>::type type;
@@ -22,11 +61,11 @@ namespace luacxx
         switch(info.get_underlying_type())
         {
           case common_type_info::underlying_type::Class:
-            ret = std::make_shared<type>();
+            ret = detail::default_initializer_impl<type>::shared();
             break;
 
           default:
-            ret = type();
+            ret = detail::default_initializer_impl<type>::create();
             break;
 
         };
@@ -36,7 +75,7 @@ namespace luacxx
 
     static return_type shared()
     {
-      return std::make_shared<type>();
+      return detail::default_initializer_impl<type>::shared();
     }
   };
 
