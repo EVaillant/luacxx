@@ -105,6 +105,11 @@ namespace luacxx
         return std::make_pair(status, msg);
       }
 
+      inline state_type get_state()
+      {
+        return state_;
+      }
+
     protected:
       template <class T0, class ... T> void fill_lookup_type_integer_(typename std::enable_if<(sizeof...(T) != 0), int>::type = 0)
       {
@@ -114,18 +119,19 @@ namespace luacxx
 
       template <class T> void fill_lookup_type_integer_()
       {
-        lookup_type_.set<T>(std::make_shared<luacxx::integer_type_info<T>>());
+        lookup_type_.set<T>(std::make_shared<integer_type_info<T>>());
       }
 
       inline void fill_lookup_type_()
       {
-        lookup_type_.set<bool>(std::make_shared<luacxx::bool_type_info>());
-        lookup_type_.set<std::string>(std::make_shared<luacxx::string_type_info<std::string>>());
-        lookup_type_.set<const char*>(std::make_shared<luacxx::string_type_info<const char*>>());
-        lookup_type_.set<float>(std::make_shared<luacxx::number_type_info<float>>());
-        lookup_type_.set<double>(std::make_shared<luacxx::number_type_info<double>>());
-        lookup_type_.set<long double>(std::make_shared<luacxx::number_type_info<long double>>());
+        lookup_type_.set<bool>(std::make_shared<bool_type_info>());
+        lookup_type_.set<std::string>(std::make_shared<string_type_info<std::string>>());
+        lookup_type_.set<const char*>(std::make_shared<string_type_info<const char*>>());
+        lookup_type_.set<float>(std::make_shared<number_type_info<float>>());
+        lookup_type_.set<double>(std::make_shared<number_type_info<double>>());
+        lookup_type_.set<long double>(std::make_shared<number_type_info<long double>>());
         fill_lookup_type_integer_<uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t>();
+        lookup_type_.set<state_type>(std::make_unique<state_type_type_info>());
       }
 
       inline void open_lib_()

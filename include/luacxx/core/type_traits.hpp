@@ -66,6 +66,11 @@ namespace luacxx
     typedef typename register_type<T>::type type;
   };
 
+  template <> struct register_type<state_type>
+  {
+    typedef state_type type;
+  };
+
   //
   //
   // in_out_permission_value
@@ -77,13 +82,13 @@ namespace luacxx
     static const bool default_out = dOut;
   };
 
-  template <class T>  struct in_out_permission              : in_out_permission_value<true,   false,  true>  {};
-  template <class T>  struct in_out_permission<const T>     : in_out_permission_value<true,   false,  true>  {};
-  template <class T>  struct in_out_permission<const T*>    : in_out_permission_value<true,   false,  true>  {};
-  template <class T>  struct in_out_permission<const T&>    : in_out_permission_value<true,   false,  true>  {};
-  template <class T>  struct in_out_permission<T*>          : in_out_permission_value<true,   true,   true>  {};
-  template <class T>  struct in_out_permission<T&>          : in_out_permission_value<true,   true,   true>  {};
-  template <>         struct in_out_permission<state_type>  : in_out_permission_value<false,  true,   false> {};
+  template <class T>  struct in_out_permission              : in_out_permission_value<true,   false,  true> {};
+  template <class T>  struct in_out_permission<const T>     : in_out_permission_value<true,   false,  true> {};
+  template <class T>  struct in_out_permission<const T*>    : in_out_permission_value<true,   false,  true> {};
+  template <class T>  struct in_out_permission<const T&>    : in_out_permission_value<true,   false,  true> {};
+  template <class T>  struct in_out_permission<T*>          : in_out_permission_value<true,   true,   true> {};
+  template <class T>  struct in_out_permission<T&>          : in_out_permission_value<true,   true,   true> {};
+  template <>         struct in_out_permission<state_type>  : in_out_permission_value<true,   false,  true> {};
   template <>         struct in_out_permission<void>        : in_out_permission_value<false,  false,  false, false> {};
 
   //
@@ -93,6 +98,17 @@ namespace luacxx
   template<class T> struct is_shared_ptr<T&> : is_shared_ptr<T> {};
   template<class T> struct is_shared_ptr<const T> : is_shared_ptr<T> {};
   template<class T> struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
+
+  //
+  // is_incomplete
+  template <class T>  struct is_incomplete : ::std::false_type
+  {
+  };
+
+  template <> struct is_incomplete<lua_State> : ::std::true_type
+  {
+  };
 }
 
 #endif

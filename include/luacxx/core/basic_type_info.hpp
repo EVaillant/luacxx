@@ -158,6 +158,28 @@ namespace luacxx
         }
       }
   };
+
+  class state_type_type_info : public type_info<state_type>
+  {
+    public:
+      typedef bool type;
+      typedef common_type_info::variable_type variable_type;
+
+      inline state_type_type_info()
+        : type_info<state_type>(common_type_info::underlying_type::Native)
+      {
+      }
+
+      inline virtual void to_lua(state_type, variable_type&, std::string &error_msg, const policy_node&) const override
+      {
+        error_msg = msg_error_invalid_tranformation;
+      }
+
+      inline virtual void from_lua(state_type state, std::size_t, variable_type& var, std::string&, const policy_node&) const override
+      {
+        var = state;
+      }
+  };
 }
 
 #endif
