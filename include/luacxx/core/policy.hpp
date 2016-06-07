@@ -188,7 +188,7 @@ namespace luacxx
   /**
    * @brief the arg_policy class
    */
-  template <class O = void> class arg_policy
+  template <class O> class arg_policy
   {
     public:
       typedef std::conditional_t<std::is_same<O, void>::value, arg_policy, O>  owner_type;
@@ -257,16 +257,50 @@ namespace luacxx
       parameter_policy& policy_;
   };
 
+  template <class O, class ... Args> std::array<arg_policy<O>,    sizeof...(Args)> make_arg_policies(O& owner, policy_node& node);
+  template <class ... Args>          std::array<arg_policy<void>, sizeof...(Args)> make_arg_policies(policy_node& node);
+
+  namespace detail
+  {
+    template <class Arg, class Dec = std::decay_t<Arg>> struct init_policy_parameter
+    {
+      template <class O> static void make(O&, policy_node& node)
+      {
+        node.get_or_create_parameter<Arg>();
+      }
+
+      static void make(policy_node& node)
+      {
+        node.get_or_create_parameter<Arg>();
+      }
+    };
+
+    template <class Arg, class R, class ... Args> struct init_policy_parameter<Arg, std::function<R (Args...)>>
+    {
+      template <class O> static void make(O& owner, policy_node& node)
+      {
+        node.get_or_create_parameter<Arg>();
+        make_arg_policies<O, R, Args...>(owner, node);
+      }
+
+      static void make(policy_node& node)
+      {
+        node.get_or_create_parameter<Arg>();
+        make_arg_policies<R, Args...>(node);
+      }
+    };
+  }
+
   template <class O, class Arg> arg_policy<O> make_arg_policy(O& owner, policy_node& node)
   {
-    node.get_or_create_parameter<Arg>();
+    detail::init_policy_parameter<Arg>::make(owner, node);
     return arg_policy<O>(owner, node);
   }
 
-  template <class Arg> arg_policy<> make_arg_policy(policy_node& node)
+  template <class Arg> arg_policy<void> make_arg_policy(policy_node& node)
   {
-    node.get_or_create_parameter<Arg>();
-    return arg_policy<>(node);
+    detail::init_policy_parameter<Arg>::make(node);
+    return arg_policy<void>(node);
   }
 
   namespace detail
@@ -275,11 +309,21 @@ namespace luacxx
     {
       return { make_arg_policy<O, typename std::tuple_element<I, Tuple>::type>(owner, node.get_or_create_sub_node(std::to_string(I)))... };
     }
+
+    template <class Tuple, std::size_t ... I> std::array<arg_policy<void>, sizeof...(I)> make_arg_policies_(policy_node& node, std::index_sequence<I...>)
+    {
+      return { make_arg_policy<typename std::tuple_element<I, Tuple>::type>(node.get_or_create_sub_node(std::to_string(I)))... };
+    }
   }
 
   template <class O, class ... Args> std::array<arg_policy<O>, sizeof...(Args)> make_arg_policies(O& owner, policy_node& node)
   {
     return detail::make_arg_policies_<O, std::tuple<Args...>>(owner, node, std::make_index_sequence<sizeof...(Args)>{});
+  }
+
+  template <class ... Args> std::array<arg_policy<void>, sizeof...(Args)> make_arg_policies(policy_node& node)
+  {
+    return detail::make_arg_policies_<std::tuple<Args...>>(node, std::make_index_sequence<sizeof...(Args)>{});
   }
 
   /**

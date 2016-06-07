@@ -19,7 +19,8 @@
 # include <lua.hpp>
 
 namespace luacxx
-{  
+{
+  template <class R, class ... ARGS> class request_from_lua;
   namespace detail
   {
     template <class T> bool check_table(const T& tables)
@@ -572,6 +573,84 @@ namespace luacxx
           error_msg = msg_error_type_not_supported;
         }
       }
+    };
+
+    //
+    // closure
+    template <class R, class ... ARGS> struct convert<std::function<R (ARGS...)>>
+    {
+      public:
+        typedef std::function<R (ARGS...)> type;
+        typedef toolsbox::any              variable_type;
+
+        struct to_data
+        {
+          request_from_lua<R, ARGS...> request;
+          type                         functor;
+        };
+
+        static void from(state_type, const lookup_type&, std::size_t, variable_type &, std::string& error_msg, const policy_node&)
+        {
+          error_msg = msg_error_type_not_supported;
+        }
+
+        static void to(state_type state, const lookup_type& lookup, variable_type& var, std::string& error_msg, const policy_node& policy)
+        {
+          if(!check_arg_call<type>(error_msg, var))
+          {
+            type functor = cast_arg_call<type>(var);
+
+            lua_newtable(state);
+            void* data = lua_newuserdata(state, sizeof(to_data));
+            new (data) to_data{{lookup, policy, 1}, functor};
+            lua_setfield(state, -2,  lua_field_ptr);
+
+            lua_newtable(state);
+            lua_pushcfunction(state, gc_);
+            lua_setfield(state, -2,  lua_field_gc);
+            lua_setmetatable(state,  -2);
+
+            lua_pushcclosure(state, call_, 1);
+          }
+        }
+
+      protected:
+        static int gc_(state_type state)
+        {
+          lua_getfield(state, -1, lua_field_ptr);
+          if(lua_isuserdata(state, -1))
+          {
+            to_data* ptr = (to_data*)lua_touserdata(state, -1);
+            ptr->~to_data();
+            lua_pop(state, 1);
+          }
+          return 0;
+        }
+
+        static int call_(state_type state)
+        {
+          int nb_response = 1;
+          lua_pushvalue(state, lua_upvalueindex(1));
+          lua_getfield(state, -1, lua_field_ptr);
+          if(lua_isuserdata(state, -1))
+          {
+            to_data* ptr = (to_data*)lua_touserdata(state, -1);
+            std::string msg = ptr->request.invoke(state, ptr->functor);
+            if(!msg.empty())
+            {
+              luaL_error(state, msg.c_str());
+            }
+            else
+            {
+              nb_response = ptr->request.get_nb_return_value();
+            }
+          }
+          else
+          {
+            luaL_error(state, msg_error_object_corrupted);
+          }
+          return nb_response;
+        }
     };
 
     //

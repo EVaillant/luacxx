@@ -12,8 +12,8 @@ namespace luacxx
   template <class T> class wrapper_global : public bindable
   {
     public:
-      typedef T type;
-      typedef arg_policy<> policy_type;
+      typedef T                type;
+      typedef arg_policy<void> policy_type;
 
       template <class U> wrapper_global(lookup_type& lookup, U&& value)
         : value_(std::forward<U>(value))
