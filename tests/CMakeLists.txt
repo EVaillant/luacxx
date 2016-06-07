@@ -9,6 +9,7 @@ if (Boost_FOUND)
     test_lookup_type.cc
     test_convert.cc
     test_request_from.cc
+    test_request_to.cc
   )
   target_link_libraries(
     test_core
