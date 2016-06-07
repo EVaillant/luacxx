@@ -219,6 +219,11 @@ namespace luacxx
 
     template <> class request_to_lua_return<void>
     {
+      public:
+        void get_return() const
+        {
+        }
+
       protected:
         std::string output_return_(const lookup_type&, const policy_node&, state_type, std::size_t &)
         {
@@ -226,6 +231,11 @@ namespace luacxx
           return empty;
         }
     };
+
+    template <class T> struct is_never_output_arg : std::false_type {};
+    template <class T> struct is_never_output_arg<const T> : std::true_type {};
+    template <class T> struct is_never_output_arg<const T*> : std::true_type {};
+    template <class T> struct is_never_output_arg<const T&> : std::true_type {};
   }
 
   template <class R, class ... ARGS> class request_to_lua : public detail::request_to_lua_return<R>
@@ -306,7 +316,7 @@ namespace luacxx
         return ret;
       }
 
-      template <class Tuple, std::size_t I> std::string output_arg_(state_type state, Tuple& args)
+      template <class Tuple, std::size_t I> std::string output_arg_(state_type state, Tuple& args, typename std::enable_if<!detail::is_never_output_arg<typename std::tuple_element<I, Tuple>::type>::value, int>::type = 0)
       {
         std::string ret;
 
@@ -326,6 +336,12 @@ namespace luacxx
         }
 
         return ret;
+      }
+
+      template <class Tuple, std::size_t I> std::string output_arg_(state_type, Tuple&, typename std::enable_if<detail::is_never_output_arg<typename std::tuple_element<I, Tuple>::type>::value, int>::type = 0)
+      {
+        static const std::string empty;
+        return empty;
       }
 
       template <class Tuple> std::string output_arg_(state_type, Tuple&)
