@@ -21,6 +21,7 @@
 namespace luacxx
 {
   template <class R, class ... ARGS> class request_from_lua;
+  template <class R, class ... ARGS> class request_to_lua;
   namespace detail
   {
     template <class T> bool check_table(const T& tables)
@@ -577,6 +578,23 @@ namespace luacxx
 
     //
     // closure
+    struct auto_unref
+    {
+      auto_unref(state_type s, int r)
+        : state(s)
+        , ref(r)
+      {
+      }
+
+      ~auto_unref()
+      {
+        luaL_unref(state, LUA_REGISTRYINDEX, ref);
+      }
+
+      state_type state;
+      int        ref;
+    };
+
     template <class R, class ... ARGS> struct convert<std::function<R (ARGS...)>>
     {
       public:
@@ -589,9 +607,34 @@ namespace luacxx
           type                         functor;
         };
 
-        static void from(state_type, const lookup_type&, std::size_t, variable_type &, std::string& error_msg, const policy_node&)
+        static void from(state_type state, const lookup_type& lookup, std::size_t idx, variable_type &var, std::string& error_msg, const policy_node& policy)
         {
-          error_msg = msg_error_type_not_supported;
+          if(lua_isfunction(state, idx))
+          {
+            lua_pushvalue(state, idx);
+            int ref = luaL_ref(state ,LUA_REGISTRYINDEX);
+            lua_remove(state, idx);
+
+            std::shared_ptr<auto_unref> unref = std::make_shared<auto_unref>(state, ref);
+            var = type([state, ref, &lookup, unref, &policy](ARGS...args) -> R
+            {
+              lua_rawgeti(state, LUA_REGISTRYINDEX, ref);
+
+              request_to_lua<R, ARGS...> request(lookup, policy, 1);
+              std::string msg_error = request.invoke(state, std::forward<ARGS>(args)...);
+
+              if(!msg_error.empty())
+              {
+                luaL_error(state, msg_error.c_str());
+              }
+
+              return request.get_return();
+            });
+          }
+          else
+          {
+            error_msg = msg_error_invalid_function;
+          }
         }
 
         static void to(state_type state, const lookup_type& lookup, variable_type& var, std::string& error_msg, const policy_node& policy)

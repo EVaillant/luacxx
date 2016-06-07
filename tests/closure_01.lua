@@ -3,7 +3,7 @@ function fct(x)
   return 5;
 end
 
---assert(fct1(fct));
+assert(fct1(fct));
 
 local p = fct2("uiuiu");
 

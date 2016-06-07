@@ -10,6 +10,7 @@ namespace luacxx
   constexpr auto msg_error_invalid_integer       = "invalid integer";
   constexpr auto msg_error_invalid_number        = "invalid number";
   constexpr auto msg_error_invalid_boolean       = "invalid boolean";
+  constexpr auto msg_error_invalid_function      = "invalid function";
   constexpr auto msg_error_invalid_string        = "invalid string";
   constexpr auto msg_error_invalid_container     = "invalid container";
   constexpr auto msg_error_invalid_tranformation = "invalid transformation";
