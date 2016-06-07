@@ -193,7 +193,42 @@ namespace luacxx
       int                nb_return_;
   };
 
-  template <class R, class ... ARGS> class request_to_lua
+  namespace detail
+  {
+    template <class R> class request_to_lua_return
+    {
+      public:
+        auto get_return() const -> decltype(((const toolsbox::any*)(nullptr))->as<R>())
+        {
+          return return_value_.as<R>();
+        }
+
+      protected:
+        std::string output_return_(const lookup_type& lookup, const policy_node& policy, state_type state, std::size_t &nb_output)
+        {
+          std::string        ret;
+          const policy_node& ret_policy = policy.get_sub_node( "0" );
+          convert_from<R>(state, lookup, -nb_output, return_value_, ret, ret_policy);
+          --nb_output;
+          return ret;
+        }
+
+      private:
+        toolsbox::any      return_value_;
+    };
+
+    template <> class request_to_lua_return<void>
+    {
+      protected:
+        std::string output_return_(const lookup_type&, const policy_node&, state_type, std::size_t &)
+        {
+          static const std::string empty;
+          return empty;
+        }
+    };
+  }
+
+  template <class R, class ... ARGS> class request_to_lua : public detail::request_to_lua_return<R>
   {
     public:
       request_to_lua(const lookup_type& lookup, const policy_node& policy, std::size_t idx)
@@ -206,11 +241,6 @@ namespace luacxx
       std::string invoke(state_type state, ARGS&&... args)
       {
         return invoke_(state, std::forward_as_tuple(std::forward<ARGS>(args)...), std::index_sequence_for<ARGS...>{});
-      }
-
-      R get_return() const
-      {
-        return return_value_.as<R>();
       }
 
     protected:
@@ -261,24 +291,9 @@ namespace luacxx
         }
         if(msg.empty())
         {
-          msg = output_return_<R>(state);
+          msg = this->output_return_(lookup_, policy_, state, nb_output_);
         }
         return msg;
-      }
-
-      template <class Return> typename std::enable_if<!std::is_same<Return, void>::value, std::string>::type output_return_(state_type state)
-      {
-        std::string        ret;
-        const policy_node& policy = policy_.get_sub_node( "0" );
-        convert_from<Return>(state, lookup_, -nb_output_, return_value_, ret, policy);
-        --nb_output_;
-        return ret;
-      }
-
-      template <class Return> typename std::enable_if<std::is_same<Return, void>::value, std::string>::type output_return_(state_type)
-      {
-        static const std::string empty;
-        return empty;
       }
 
       template <class Tuple, std::size_t I0, std::size_t ... I> std::string output_arg_(state_type state, Tuple& args, typename std::enable_if<(sizeof...(I) != 0), int>::type = 0)
