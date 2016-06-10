@@ -183,6 +183,60 @@ namespace luacxx
         return ret;
       }
 
+      template <class T> T* get_instance(state_type state, std::size_t idx)
+      {
+        typedef T                           class_type;
+        typedef std::shared_ptr<class_type> smart_type;
+
+        class_type* ret =  nullptr;
+        const char* msg = nullptr;
+        std::pair<bool, common_class_type_info::class_field> class_field = get_class_field(state, idx);
+        if(class_field.first)
+        {
+          if(class_field.second.ptr)
+          {
+            toolsbox::any any = get_instance(class_field.second);
+            if(any.empty())
+            {
+              msg = msg_error_invalid_object;
+            }
+            else
+            {
+              if(any.is<class_type*>())
+              {
+                ret = any.as<class_type*>();
+              }
+              else if(any.is<smart_type>())
+              {
+                ret = any.as<smart_type>().get();
+              }
+              else
+              {
+                msg = msg_error_invalid_object;
+              }
+            }
+          }
+          else
+          {
+            msg = msg_error_null_object;
+          }
+        }
+        else
+        {
+          msg = msg_error_object_corrupted;
+        }
+        if(msg)
+        {
+          luaL_error(state, msg);
+        }
+        else
+        {
+          assert(ret);
+          lua_remove(state, 1);
+        }
+        return ret;
+      }
+
       inline void add_base(cast_type cast, const self_smart_type& base)
       {
         bases_.push_back(std::make_pair(cast, base));

@@ -37,7 +37,7 @@ namespace luacxx
 
       virtual int invoke_(state_type state) override
       {
-        class_type* self = get_ptr_(state);
+        class_type* self = helper_->get_instance<class_type>(state, 1);
         int nb_return = 1;
         if(self)
         {
@@ -58,57 +58,6 @@ namespace luacxx
         return nb_return;
       }
 
-      class_type* get_ptr_(state_type state)
-      {
-        class_type* ret =  nullptr;
-        const char* msg = nullptr;
-        std::pair<bool, common_class_type_info::class_field> class_field = helper_->get_class_field(state, 1);
-        if(class_field.first)
-        {
-          if(class_field.second.ptr)
-          {
-            toolsbox::any any = helper_->get_instance(class_field.second);
-            if(any.empty())
-            {
-              msg = msg_error_invalid_object;
-            }
-            else
-            {
-              if(any.is<class_type*>())
-              {
-                ret = any.as<class_type*>();
-              }
-              else if(any.is<smart_type>())
-              {
-                ret = any.as<smart_type>().get();
-              }
-              else
-              {
-                msg = msg_error_invalid_object;
-              }
-            }
-          }
-          else
-          {
-            msg = msg_error_null_object;
-          }
-        }
-        else
-        {
-          msg = msg_error_object_corrupted;
-        }
-        if(msg)
-        {
-          luaL_error(state, msg);
-        }
-        else
-        {
-          assert(ret);
-          lua_remove(state, 1);
-        }
-        return ret;
-      }
-
     private:
       smart_common_class_type_info_type helper_;
       functor_type                      functor_;
@@ -117,6 +66,5 @@ namespace luacxx
       request_type                      request_;
   };
 }
-
 
 #endif

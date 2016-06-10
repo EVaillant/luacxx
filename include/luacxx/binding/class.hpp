@@ -21,29 +21,145 @@ namespace luacxx
 
   namespace detail
   {
-    class index : public bindable
+    class wrapper_inheritance
     {
       public:
-        inline index()
+        inline virtual ~wrapper_inheritance() {}
+
+        virtual bool check_dependency() const = 0;
+        virtual void link() = 0;
+        virtual const std::string& get_module_name() const = 0;
+        virtual const std::string& get_class_name() const = 0;
+    };
+
+    class wrapper_property
+    {
+      public:
+        inline virtual ~wrapper_property() {}
+
+        virtual void get(state_type state, std::size_t idx) = 0;
+        virtual void set(state_type state, std::size_t idx) = 0;
+
+        virtual bool has_getter() const = 0;
+        virtual bool has_setter() const = 0;
+    };
+    typedef std::unique_ptr<wrapper_property>        property_ptr_type;
+    typedef std::map<std::string, property_ptr_type> properties_type;
+
+    class property_new_index : public callable
+    {
+      public:
+        inline property_new_index(properties_type& properties)
+          : properties_(properties)
+        {
+        }
+
+      protected:
+        inline virtual int invoke_(state_type state) override
+        {
+          if(lua_isstring(state, -2))
+          {
+            std::string name = lua_tostring(state, -2);
+            lua_remove(state, -2);
+
+            properties_type::iterator it_properties = properties_.find(name);
+            if(it_properties != properties_.end())
+            {
+              property_ptr_type& property = it_properties->second;
+              if(property->has_setter())
+              {
+                property->set(state, 1);
+              }
+              else
+              {
+                luaL_error(state, msg_error_property_ro);
+              }
+            }
+            else
+            {
+              luaL_error(state, msg_error_invalid_property_name);
+            }
+          }
+          return 0;
+        }
+
+      private:
+        properties_type& properties_;
+    };
+
+    class propery_and_method_index : public bindable
+    {
+      public:
+        inline propery_and_method_index(properties_type& properties)
+          : properties_(properties)
         {
         }
 
         inline virtual bool bind(state_type state) override
         {
           lua_pushvalue(state, -1);
+          if(has_one_getter_())
+          {
+            lua_pushlightuserdata(state, this);
+            lua_pushcclosure(state, &lua_wrapper_, 2);
+          }
           return true;
         }
-    };
 
-    class wrapper_inheritance
-    {
-      public:
-        virtual ~wrapper_inheritance() {}
+      protected:
+        static inline int lua_wrapper_(state_type state)
+        {
+          propery_and_method_index* self = (propery_and_method_index*) lua_touserdata(state, lua_upvalueindex(2));
+          return self->invoke_(state);
+        }
 
-        virtual bool check_dependency() const = 0;
-        virtual void link() = 0;
-        virtual const std::string& get_module_name() const = 0;
-        virtual const std::string& get_class_name() const = 0;
+        inline int invoke_(state_type state)
+        {
+          bool found = lua_isstring(state, -1);
+          if(found)
+          {
+            std::string name = lua_tostring(state, -1);
+            lua_remove(state, -1);
+
+            properties_type::iterator it_properties = properties_.find(name);
+            if(it_properties != properties_.end())
+            {
+              property_ptr_type& property = it_properties->second;
+              if(property->has_getter())
+              {
+                property->get(state, 1);
+              }
+              else
+              {
+                luaL_error(state, msg_error_property_wo);
+              }
+            }
+            else
+            {
+              lua_remove(state, -1);
+              lua_pushvalue(state, lua_upvalueindex(1));
+              lua_getfield(state, -1, name.c_str());
+            }
+          }
+          return found;
+        }
+
+        inline bool has_one_getter_() const
+        {
+          bool ret = false;
+          for(const properties_type::value_type& val: properties_)
+          {
+            ret = val.second->has_getter();
+            if(ret)
+            {
+              break;
+            }
+          }
+          return ret;
+        }
+
+      private:
+        properties_type&   properties_;
     };
 
     class inheritance_index : public callable
@@ -52,7 +168,7 @@ namespace luacxx
         typedef std::unique_ptr<wrapper_inheritance> inheritance_ptr_type;
         typedef std::vector<inheritance_ptr_type>    inheritances_type;
 
-        inheritance_index(engine& e, inheritances_type& inheritances)
+        inline inheritance_index(engine& e, inheritances_type& inheritances)
           : engine_(e)
           , inheritances_(inheritances)
         {
@@ -78,14 +194,14 @@ namespace luacxx
           bool found = false;
           if(lua_isstring(state, -1))
           {
-            std::string method_name = lua_tostring(state, -1);
+            std::string name = lua_tostring(state, -1);
             lua_pop(state, 2);
 
             for(inheritance_ptr_type& inheritance : inheritances_)
             {
               get_symbol_(state, *inheritance);
-              lua_getfield(state, -1, method_name.c_str());
-              if(lua_iscfunction(state, -1))
+              lua_getfield(state, -1, name.c_str());
+              if(!lua_isnil(state, -1))
               {
                 lua_remove(state, -2);
                 lua_remove(state, -2);
@@ -101,7 +217,7 @@ namespace luacxx
           return found;
         }
 
-        void get_symbol_(state_type state, wrapper_inheritance& inheritance)
+        inline void get_symbol_(state_type state, wrapper_inheritance& inheritance)
         {
           engine_.get_module(inheritance.get_module_name()).get_symbol(state, inheritance.get_class_name());
         }
@@ -323,6 +439,84 @@ namespace luacxx
         lookup_type&          lookup_;
         class_info_smart_type class_type_info_;
     };
+
+    template <class O, class T, class F> class wrapper_property_impl : public wrapper_property
+    {
+      public:
+        typedef F field_type;
+        typedef T class_type;
+        typedef O owner_type;
+        typedef std::function<field_type (const class_type&)> getter_type;
+        typedef std::function<void (class_type&, field_type)> setter_type;
+        typedef arg_policy<owner_type> policy_type;
+
+        wrapper_property_impl(lookup_type& lookup, owner_type& owner, const getter_type& getter, const setter_type& setter)
+          : lookup_(lookup)
+          , getter_(getter)
+          , setter_(setter)
+          , policy_(make_arg_policy<owner_type, field_type>(owner, node_))
+        {
+        }
+
+        virtual void get(state_type state, std::size_t idx) override
+        {
+          type_info<class_type>& info = lookup_.get<class_type>();
+          class_type* self            = info.template get_instance<class_type>(state, idx);
+          if(self)
+          {
+            field_type field  = getter_(*self);
+            toolsbox::any var = std::ref(field);
+            std::string   error_msg;
+            convert_to<field_type&>(state, lookup_, var, error_msg, node_);
+            if(!error_msg.empty())
+            {
+              luaL_error(state, error_msg.c_str());
+            }
+          }
+        }
+
+        virtual void set(state_type state, std::size_t idx) override
+        {
+          type_info<class_type>& info = lookup_.get<class_type>();
+          class_type* self            = info.template get_instance<class_type>(state, idx);
+          if(self)
+          {
+            toolsbox::any var;
+            std::string   error_msg;
+            convert_from<field_type&>(state, lookup_, idx, var, error_msg, node_);
+            if(error_msg.empty() && !check_arg_call<field_type>(error_msg, var))
+            {
+              setter_(*self, cast_arg_call<field_type>(var));
+            }
+            else
+            {
+              luaL_error(state, error_msg.c_str());
+            }
+          }
+        }
+
+        virtual bool has_getter() const
+        {
+          return (bool)getter_;
+        }
+
+        virtual bool has_setter() const
+        {
+          return (bool)setter_;
+        }
+
+        policy_type& get_policy()
+        {
+          return policy_;
+        }
+
+      private:
+        lookup_type& lookup_;
+        getter_type  getter_;
+        setter_type  setter_;
+        policy_node  node_;
+        policy_type  policy_;
+    };
   }  
 
   template <class C> class wrapper_class : public bindable
@@ -449,12 +643,117 @@ namespace luacxx
         return policy;
       }
 
+      template <class A> auto& property(const std::string& name, A (class_type::*attr), const default_policy& = default_policy())
+      {
+        this->property<A>(name, attr, custum_policy());
+        return *this;
+      }
+
+      template <class A> auto& property(const std::string& name, A (class_type::*attr), const custum_policy& p)
+      {
+        std::function<const A& (const class_type&)> getter = [attr](const class_type&t) -> const A&
+        {
+          return t.*attr;
+        };
+
+        std::function<void (class_type&, const A&)> setter = [attr](class_type&t, const A& a)
+        {
+          t.*attr = a;
+        };
+
+        return this->property<const A&>(name, getter, setter, p);
+      }            
+
+      template <class A> auto& property_readonly(const std::string& name, const A (class_type::*attr), const default_policy& = default_policy())
+      {
+        this->property<A>(name, attr, custum_policy());
+        return *this;
+      }
+
+      template <class A> auto& property_readonly(const std::string& name, const A (class_type::*attr), const custum_policy& p)
+      {
+        std::function<const A& (const class_type&)> getter = [attr](const class_type&t) -> const A&
+        {
+          return t.*attr;
+        };
+        std::function<void (class_type&, const A&)> setter;
+
+        return this->property<const A&>(name, getter, setter, p);
+      }
+
+      template <class A> auto& property_writeonly(const std::string& name, A (class_type::*attr), const default_policy& = default_policy())
+      {
+        this->property<A>(name, attr, custum_policy());
+        return *this;
+      }
+
+      template <class A> auto& property_writeonly(const std::string& name, A (class_type::*attr), const custum_policy& p)
+      {
+        std::function<const A& (const class_type&)> getter;
+        std::function<void (class_type&, const A&)> setter = [attr](class_type&t, const A& a)
+        {
+          t.*attr = a;
+        };
+
+        return this->property<const A&>(name, getter, setter, p);
+      }
+
+      template <class A> auto& property(const std::string& name, A (class_type::*g_attr)() const, void (class_type::*s_attr)(A), const default_policy& = default_policy())
+      {
+        this->property<A>(name, g_attr, s_attr, custum_policy());
+        return *this;
+      }
+
+      template <class A> auto& property(const std::string& name, A (class_type::*g_attr)() const, void (class_type::*s_attr)(A), const custum_policy& p)
+      {
+        std::function<A (const class_type&)> getter;
+        if(g_attr)
+        {
+          getter = [g_attr](const class_type&t) -> A
+          {
+            return (t.*g_attr)();
+          };
+        }
+
+        std::function<void (class_type&, A)> setter;
+        if(s_attr)
+        {
+          setter = [s_attr](class_type&t, A a)
+          {
+            (t.*s_attr)(a);
+          };
+        }
+
+        return this->property<A>(name, getter, setter, p);
+      }
+
+      template <class A> auto& property(const std::string& name, const std::function<A (const class_type&)>& getter, const std::function<void (class_type&, A)>& setter, const default_policy& = default_policy())
+      {
+        this->property<A>(name, getter, setter, custum_policy());
+        return *this;
+      }
+
+      template <class A> auto& property(const std::string& name, const std::function<A (const class_type&)>& getter, const std::function<void (class_type&, A)>& setter, const custum_policy&)
+      {
+        typedef detail::wrapper_property_impl<self_type, class_type, A> wrapper_type;
+        typedef typename wrapper_type::policy_type                      policy_type;
+
+        if(setter && class_bindables_.find(detail::lua_field_newindex) == class_bindables_.end())
+        {
+          class_bindables_[detail::lua_field_newindex] = std::make_unique<detail::property_new_index>(properties_);
+        }
+        std::unique_ptr<wrapper_type> wrapper = std::make_unique<wrapper_type>(lookup_, *this, getter, setter);
+        policy_type &policy = wrapper->get_policy();
+        properties_.insert(std::make_pair(name, std::move(wrapper)));
+        return policy;
+      }
+
     protected:           
-      typedef std::unique_ptr<detail::wrapper_inheritance> inheritance_ptr_type;
-      typedef std::vector<inheritance_ptr_type>            inheritances_type;
+      typedef detail::inheritance_index::inheritances_type inheritances_type;
+      typedef detail::properties_type                      properties_type;
       typedef std::unique_ptr<bindable>                    bindable_ptr_type;
       typedef std::map<std::string, bindable_ptr_type>     bindables_type;
-      typedef std::shared_ptr<class_info_type>             class_info_smart_type;      
+      typedef std::shared_ptr<class_info_type>             class_info_smart_type;
 
       bool check_dependency() const
       {
@@ -490,7 +789,7 @@ namespace luacxx
         typedef dtor_method<class_type> dtor_method_type;
 
         class_bindables_[detail::lua_field_gc]    = std::make_unique<dtor_method_type>(class_type_info_);
-        class_bindables_[detail::lua_field_index] = std::make_unique<detail::index>();
+        class_bindables_[detail::lua_field_index] = std::make_unique<detail::propery_and_method_index>(properties_);
       }            
 
     private:
@@ -499,6 +798,7 @@ namespace luacxx
       const std::string     module_name_;
       const std::string     name_;
       inheritances_type     inheritances_;
+      properties_type       properties_;
       bindables_type        class_bindables_;
       bindables_type        instance_bindables_;
       class_info_smart_type class_type_info_;
