@@ -32,6 +32,7 @@ if (Boost_FOUND)
     incomplete_data.cc
     test_closure.cc
     test_caller.cc
+    test_property.cc
   )
   target_link_libraries(
     test_binding

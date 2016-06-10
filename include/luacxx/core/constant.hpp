@@ -20,6 +20,9 @@ namespace luacxx
   constexpr auto msg_error_object_corrupted      = "object corrupted";
   constexpr auto msg_error_null_object           = "null object";
   constexpr auto msg_error_call                  = "error during the call";
+  constexpr auto msg_error_property_ro           = "error read only propertiy";
+  constexpr auto msg_error_property_wo           = "error write only propertiy";
+  constexpr auto msg_error_invalid_property_name = "invalid property name";
 
   //
   // field
@@ -29,13 +32,14 @@ namespace luacxx
 
   namespace detail
   {
-    constexpr auto lua_field_call    = "__call";
-    constexpr auto lua_field_index   = "__index";
-    constexpr auto lua_field_gc      = "__gc";
-    constexpr auto lua_field_id      = "__id_private";
-    constexpr auto lua_field_ptr     = "__ptr_private";
-    constexpr auto lua_field_type    = "__type_private";
-    constexpr auto lua_field_convert = "__convert_private";
+    constexpr auto lua_field_call     = "__call";
+    constexpr auto lua_field_index    = "__index";
+    constexpr auto lua_field_newindex = "__newindex";
+    constexpr auto lua_field_gc       = "__gc";
+    constexpr auto lua_field_id       = "__id_private";
+    constexpr auto lua_field_ptr      = "__ptr_private";
+    constexpr auto lua_field_type     = "__type_private";
+    constexpr auto lua_field_convert  = "__convert_private";
   }
 }
 
