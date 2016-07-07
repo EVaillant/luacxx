@@ -6,6 +6,7 @@
 # include <luacxx/binding/ctor_method.hpp>
 # include <luacxx/binding/dtor_method.hpp>
 # include <luacxx/binding/method.hpp>
+# include <luacxx/binding/static_method.hpp>
 
 # include <luacxx/core/policy.hpp>
 # include <luacxx/core/utility.hpp>
@@ -638,6 +639,34 @@ namespace luacxx
         typedef typename method_type::policy_type                 policy_type;
 
         std::unique_ptr<method_type> mth = std::make_unique<method_type>(lookup_, *this, class_type_info_, functor);
+        policy_type &policy = mth->get_policy();
+        class_bindables_[name] = std::move(mth);
+        return policy;
+      }
+
+      template <class R, class ... ARGS> auto& static_method(const std::string& name, R (*mth)(ARGS ...), const default_policy& = default_policy())
+      {
+        this->extern_static_method<R, ARGS...>(name, std::function<R (ARGS ...)>(mth), custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& method(const std::string& name, R (*mth)(ARGS ...), const custum_policy&)
+      {
+        return this->extern_static_method<R, ARGS...>(name, std::function<R (ARGS ...)>(mth), custum_policy());
+      }
+
+      template <class R, class ... ARGS> auto& extern_static_method(const std::string& name, const std::function<R (ARGS ...)>& functor, const default_policy& = default_policy())
+      {
+        this->extern_static_method<R, ARGS...>(name, functor, custum_policy());
+        return *this;
+      }
+
+      template <class R, class ... ARGS> auto& extern_static_method(const std::string& name, const std::function<R (ARGS ...)>& functor, const custum_policy&)
+      {
+        typedef luacxx::static_method<self_type, class_type, R, ARGS...> method_type;
+        typedef typename method_type::policy_type                        policy_type;
+
+        std::unique_ptr<method_type> mth = std::make_unique<method_type>(lookup_, *this, functor);
         policy_type &policy = mth->get_policy();
         class_bindables_[name] = std::move(mth);
         return policy;
