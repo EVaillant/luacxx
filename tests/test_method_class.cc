@@ -63,12 +63,25 @@ namespace
       {
         return (a == 7 && b == "blabla" && this == last_cls1);
       }
-  };
+  };    
 
   bool extern_meth1(Cls1* cls, int a, const std::string& b)
   {
     return (a ==  9 && b == "blabla"  && cls == last_cls1);
   }
+
+  class Cls2
+  {
+    public:
+      Cls2()
+      {
+      }
+
+      static bool mth1(const std::string&a, const std::string& b)
+      {
+        return a == b;
+      }
+  };
 
   class ClassA
   {
@@ -237,4 +250,20 @@ BOOST_AUTO_TEST_CASE( method_class_03 )
   }
 }
 
+BOOST_AUTO_TEST_CASE( method_class_04 )
+{
+  init();
+  {
+    luacxx::engine engine;
+    luacxx::make_class<Cls2>(engine, "Cls2")
+        .ctor()
+        .static_method("mth1", &Cls2::mth1);
+    BOOST_CHECK(engine.bind());
 
+    std::pair<bool, std::string> ret = engine.do_file(LUACXX_TESTS_DIR "method_class_04.lua");
+    if(!ret.first)
+    {
+      BOOST_FAIL(ret.second);
+    }
+  }
+}
