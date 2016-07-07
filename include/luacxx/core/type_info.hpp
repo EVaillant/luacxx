@@ -87,9 +87,9 @@ namespace luacxx
       {
       }
 
-      inline std::pair<bool, class_field> get_class_field(state_type state, std::size_t idx) const
+      static inline std::pair<bool, class_field> get_class_field(state_type state, std::size_t idx)
       {
-        class_field ptr {nullptr, class_ptr_type::raw_ptr, class_id_};
+        class_field ptr {nullptr, class_ptr_type::raw_ptr, 0};
         bool status = false;
 
         if(lua_istable(state, idx))
@@ -153,7 +153,7 @@ namespace luacxx
       inline toolsbox::any get_instance(const class_field& c) const
       {
         toolsbox::any ret;
-        if(c.id != class_id_)
+        if(c.id != class_id_ && c.ptr != nullptr)
         {
           convert_mappings::iterator it = convert_mappings_.find(c.id);
           if(it == convert_mappings_.end())

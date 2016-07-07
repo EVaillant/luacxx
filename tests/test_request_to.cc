@@ -12,8 +12,6 @@
 
 #include "helper.hpp"
 
-#include <iostream>
-
 BOOST_AUTO_TEST_CASE( request_to_01 )
 {
   luacxx::lookup_type lookup;

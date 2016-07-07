@@ -52,7 +52,7 @@ namespace luacxx
           }
           else
           {
-            nb_return = request_.get_nb_return_value();
+            nb_return = request_.get_nb_return_value() + policy_.get_extra_return_arg();
           }
         }
         return nb_return;
