@@ -1,6 +1,6 @@
 # Luacxx 
 
-It is c++ lua binding (c++11 / c++14)
+It is c++ lua binding (c++14)
 * depends on lua and toolsbox
 * without rtti
 * without exception
