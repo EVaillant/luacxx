@@ -1,5 +1,5 @@
-#ifndef LUACXX_BINDING_STACK_HPP
-# define LUACXX_BINDING_STACK_HPP
+#ifndef LUACXX_HELPER_STACK_HPP
+# define LUACXX_HELPER_STACK_HPP
 
 # include <luacxx/core/type_traits.hpp>
 

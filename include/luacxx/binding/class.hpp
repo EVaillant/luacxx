@@ -15,6 +15,9 @@
 
 # include <lua.hpp>
 
+# include <luacxx/helper/stack.hpp>
+# include <iostream>
+
 namespace luacxx
 {
   struct default_policy {};
@@ -253,7 +256,7 @@ namespace luacxx
 
         virtual void from_lua(state_type state, std::size_t idx, variable_type& var, std::string& error_msg, const policy_node&) const override
         {
-          std::pair<bool, class_field> ret = this->get_class_field(state, idx);
+          std::pair<bool, class_field> ret = common_class_type_info::get_class_field(state, idx);
           if(ret.first)
           {
             var = this->get_instance(ret.second);
@@ -577,6 +580,22 @@ namespace luacxx
         return *this;
       }
 
+      template <class T> self_type& cast_to(const std::string& name = "cast_to")
+      {
+        if(cast_to_mapping_.empty())
+        {
+          auto& policy = this->extern_static_method(name, std::function<void ()>(std::bind(cast_to_, std::ref(engine_), std::cref(lookup_), std::cref(cast_to_mapping_))), custum_policy());
+          policy.set_extra_return_arg(1);
+        }
+        cast_to_mapping_[toolsbox::type_uid::get<T>()] = cast_to_impl_<T>;
+        return *this;
+      }
+
+      self_type& instance_of(const std::string& name = "instance_of")
+      {
+        return this->extern_static_method(name, std::function<bool ()>(std::bind(instance_of_, std::ref(engine_), std::cref(lookup_))));
+      }
+
       template <class ... ARGS> auto& ctor(const default_policy& = default_policy())
       {
         this->ctor<ARGS...>(custum_policy());
@@ -783,6 +802,8 @@ namespace luacxx
       typedef std::unique_ptr<bindable>                    bindable_ptr_type;
       typedef std::map<std::string, bindable_ptr_type>     bindables_type;
       typedef std::shared_ptr<class_info_type>             class_info_smart_type;
+      typedef void (*cast_callback_type)(engine&, const lookup_type&, const common_class_type_info::class_field&);
+      typedef std::map<common_class_type_info::class_id_type, cast_callback_type> cast_to_mapping_type;
 
       bool check_dependency() const
       {
@@ -792,6 +813,64 @@ namespace luacxx
           ret = ret && type->check_dependency();
         }
         return ret;
+      }
+
+      static bool instance_of_(engine& e, const lookup_type& lookup)
+      {
+        static const auto& type_info = lookup.get<class_type>();
+        state_type state = e.get_state();
+        std::pair<bool, common_class_type_info::class_field> instance_info = common_class_type_info::get_class_field(state, 1);
+        return instance_info.first && !type_info.get_instance(instance_info.second).empty();
+      }
+
+      template <class S> static void cast_to_impl_(engine& e, const lookup_type& lookup, const common_class_type_info::class_field& instance_info)
+      {
+        toolsbox::any value;
+        switch(instance_info.type)
+        {
+          case common_class_type_info::class_ptr_type::raw_ptr:
+          {
+            value = (class_type*)((S*)instance_info.ptr);
+          }
+          break;
+
+          case common_class_type_info::class_ptr_type::smart_ptr:
+          {
+            value = std::static_pointer_cast<class_type>(*((std::shared_ptr<S>*)instance_info.ptr));
+          }
+          break;
+        }
+
+        std::string error_msg;
+        policy_node policy;
+        lookup.get<class_type>().to_lua(e.get_state(), value, error_msg, policy);
+        if(!error_msg.empty())
+        {
+          luaL_error(e.get_state(), error_msg.c_str());
+        }
+      }
+
+      static void cast_to_(engine& e, const lookup_type& lookup, const cast_to_mapping_type& mapping)
+      {
+        state_type state = e.get_state();
+        std::pair<bool, common_class_type_info::class_field> instance_info = common_class_type_info::get_class_field(state, 1);
+        if(instance_info.first)
+        {
+          cast_to_mapping_type::const_iterator it = mapping.find(instance_info.second.id);
+          if(it != mapping.end())
+          {
+            cast_callback_type callback = it->second;
+            (*callback)(e, lookup, instance_info.second);
+          }
+          else
+          {
+            lua_pushnil(state);
+          }
+        }
+        else
+        {
+          lua_pushnil(state);
+        }
       }
 
       bool bind_(state_type state, const std::string& name, const bindables_type& bindables)
@@ -831,6 +910,7 @@ namespace luacxx
       bindables_type        class_bindables_;
       bindables_type        instance_bindables_;
       class_info_smart_type class_type_info_;
+      cast_to_mapping_type  cast_to_mapping_;
 
       const std::string class_meta_name_;
       const std::string instance_meta_name_;

@@ -33,7 +33,7 @@ namespace luacxx
       virtual int invoke_(state_type state) override
       {
         std::string msg = request_.invoke(state, functor_);
-        int   nb_return = request_.get_nb_return_value();
+        int   nb_return = request_.get_nb_return_value() + policy_.get_extra_return_arg();
         if(!msg.empty())
         {
           nb_return = 1;

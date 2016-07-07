@@ -341,6 +341,7 @@ namespace luacxx
       policy(owner_type& owner, policy_node& node)
         : owner_(owner)
         , args_(make_arg_policies<self_type, R, Args...>(*this, node))
+        , extra_return_arg_(0)
       {
       }
 
@@ -354,9 +355,19 @@ namespace luacxx
         return args_[i];
       }
 
+      void set_extra_return_arg(int nb)
+      {
+        extra_return_arg_ = nb;
+      }
+
+      int get_extra_return_arg() const
+      {
+        return extra_return_arg_;
+      }
     private:
       owner_type&  owner_;
       args_type    args_;
+      int          extra_return_arg_;
   };
 }
 

@@ -20,7 +20,7 @@ namespace luacxx
     protected:
       virtual int invoke_(state_type state) override
       {        
-        std::pair<bool, common_class_type_info::class_field> ret = helper_->get_class_field(state, 1);
+        std::pair<bool, common_class_type_info::class_field> ret = common_class_type_info::get_class_field(state, 1);
         if(ret.first && ret.second.id == toolsbox::type_uid::get<class_type>())
         {
           if(ret.second.ptr)

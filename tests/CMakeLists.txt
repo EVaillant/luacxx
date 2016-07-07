@@ -41,4 +41,19 @@ if (Boost_FOUND)
   )
   add_test(test_binding test_binding)
 
+  add_executable(
+    test_helper
+    test_helper.cc
+    test_is_same_class_type.cc
+    test_instance_of.cc
+    test_cast_to.cc
+    test_logger.cc
+  )
+  target_link_libraries(
+    test_helper
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${LUA_LIBRARY}
+  )
+  add_test(test_helper test_helper)
+
 endif (Boost_FOUND)
